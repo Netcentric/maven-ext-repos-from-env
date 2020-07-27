@@ -45,18 +45,21 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
         List<RepoFromEnv> reposFromEnv = getReposFromEnv(System.getenv());
 
-        MavenExecutionRequest request = cliRequest.getRequest();
+        configureMavenExecution(cliRequest.getRequest(), reposFromEnv);
+        
 
+    }
+
+    void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv) {
         if (!reposFromEnv.isEmpty()) {
-
             Profile repositoriesFromEnv = new Profile();
-
+    
             for (RepoFromEnv repoFromEnv : reposFromEnv) {
-
+    
                 Repository repository = getRepository(repoFromEnv);
-
+    
                 repositoriesFromEnv.addRepository(repository);
-
+    
                 if (repoFromEnv.getUsername() != null && repoFromEnv.getPassword() != null) {
                     Server server = new Server();
                     server.setId(repoFromEnv.getId());
@@ -64,17 +67,15 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                     server.setPassword(repoFromEnv.getPassword());
                     request.addServer(server);
                 }
-                logger.info("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
+                logger.debug("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
                         + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername(): "") + ")");
             }
-
+    
             // activate profile
             repositoriesFromEnv.setId(PROFILE_ID_REPOSITORIES_FROM_ENV);
             request.addProfile(repositoriesFromEnv);
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
-
         }
-
     }
 
     private Repository getRepository(RepoFromEnv repoFromEnv) {
