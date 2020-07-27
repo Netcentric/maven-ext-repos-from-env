@@ -64,8 +64,8 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                     server.setPassword(repoFromEnv.getPassword());
                     request.addServer(server);
                 }
-                logger.debug("Repository from system env: " + repoFromEnv.getUrl()
-                        + (repoFromEnv.getUsername() != null ? " (user: " + repoFromEnv.getUsername() + ")" : ""));
+                logger.info("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
+                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername(): "") + ")");
             }
 
             // activate profile
@@ -98,14 +98,31 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                 .filter(key -> key.startsWith(ENV_PROP_PREFIX_MVN_SETTINGS_REPO) && key.endsWith(ENV_PROP_SUFFIX_URL))
                 .map(key -> key.substring(ENV_PROP_PREFIX_MVN_SETTINGS_REPO.length(), key.length() - ENV_PROP_SUFFIX_URL.length()))
                 .map(repoEnvNameInKey -> {
+                    // for the case the short form without like MVN_SETTINGS_REPO_URL is used, repoEnvNameInKey is and empty string
+                    // for the case a key like MVN_SETTINGS_REPO_MYCOMP1_URL is used, the id is sysEnvRepoMYCOMP1
                     String id = REPO_ID_PREFIX + (repoEnvNameInKey.isEmpty() ? "" : repoEnvNameInKey.replaceFirst("_", ""));
-                    String url = systemEnv.get(ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_URL);
-                    String username = systemEnv.get(ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_USERNAME);
-                    String password = systemEnv.get(ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_PASSWORD);
-                    return new RepoFromEnv(id, url, username, password);
+                    String urlProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_URL;
+                    String url = systemEnv.get(urlProp);
+                    String usernameProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_USERNAME;
+                    String username = systemEnv.get(usernameProp);
+                    String passwordProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_PASSWORD;
+                    String password = systemEnv.get(passwordProp);
+                    if(!isBlank(username) && isBlank(password)) {
+                        throw new IllegalArgumentException("If property "+usernameProp+" is set, password property "+passwordProp+ " also has to be set along with it");
+                    }
+                    if(!isBlank(url)) {
+                        return new RepoFromEnv(id, url, username, password);
+                    } else {
+                        return null;
+                    }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
+    }
+
+    private boolean isBlank(String str) {
+        return str==null || str.trim().isEmpty();
     }
 
 }
