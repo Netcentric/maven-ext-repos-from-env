@@ -25,7 +25,11 @@ import org.apache.maven.model.RepositoryPolicy;
 import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.Logger;
 
-/** Adds maven repositories as found in system environment to execution environment.*/
+/** <p>Adds maven repositories as found in system environment to execution environment.</p>
+ * 
+ *  <p><strong>This module is used by configuration only (not via Java API), 
+ * see <a href="https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md">https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md</a>
+ * </strong></p> */
 @Named("configuration-processor")
 public class FromEnvReposConfigurationProcessor implements ConfigurationProcessor {
 
