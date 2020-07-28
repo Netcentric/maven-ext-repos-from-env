@@ -1,10 +1,10 @@
 # Maven Extension: Repos from System Env
 
-This maven extension allows to add remote repositories to be be added to maven execution by solely using OS level system environment variables. 
+This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). 
 
-While most of the time a combination of settings.xml (and potentially pom-configured repositories) are the recommended approach, for cases where the settings.xml is not fully under the development teams control it can be useful to use this extension. 
+While most of the time settings the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to use this extension. 
 
-For the case the relevant environment variables are not set, this extension has no effect. This allows nicely to 
+In case the relevant environment variables are not set, this extension has no effect. This allows to 
 
 * Minimise the changes in the regular project setup (only the extension has to be added, all mirrors, repositories from `settings.xml` may remain active for local developers or CI servers)
 * For constraint build environments (without full control over the `settings.xml` file), the environment variables can be set (and hence the repo/credentials automatically become active)
@@ -60,11 +60,11 @@ export MVN_SETTINGS_REPO_NAME12_PASSWORD=password2
 ```
 For this case two repositories and two virutal server entries for are created.
 
-## Use with Adobe Experience Manager Cloud Manager
+## Usage with Adobe Experience Manager Cloud Manager
 
 **Step 1: Configure the extension for your repository**
 
-Add the maven extension to the `.mvn/extensions.xml` file as described above.
+Reference the Maven extension in the `.mvn/extensions.xml` file as described above.
 
 **Step 2: Setup the environment for your build using Adobe IO**
 
@@ -76,7 +76,7 @@ Add the maven extension to the `.mvn/extensions.xml` file as described above.
 * Install [aio-cli-plugin-cloudmanager](https://github.com/adobe/aio-cli-plugin-cloudmanager#installation)
 * Setup [Adobe IO authentication with Cloud Manager](https://github.com/adobe/aio-cli-plugin-cloudmanager#authentication)
 
-Once everything is set up, the environment variables of the cloud manager build can be set as follows:
+Once everything is set up, the environment variables of the Cloud Manager build can be set as follows:
 
 ```
 aio cloudmanager:set-pipeline-variables \
@@ -89,6 +89,6 @@ aio cloudmanager:set-pipeline-variables \
      MVN_SETTINGS_REPO_PASSWORD <REPO_PASSWORD>  
 ```
 
-The parameters `<PIPELINE_ID>` and `<PROGRAM_ID>` can be derived from URLs when browsing the cloud manager. The call needs to be made for each pipeline as set up in cloud manager (all non-prod and the prod pipeline).
+The parameters `<PIPELINE_ID>` and `<PROGRAM_ID>` can be derived from URLs when browsing the Cloud Manager. The call needs to be made for each pipeline as set up in cloud manager (all non-prod and the prod pipeline).
 
 See also official [Adobe documentation](https://docs.adobe.com/content/help/en/experience-manager-cloud-service/onboarding/getting-access/creating-aem-application-project.html#pipeline-variables) and [reference on GitHub](https://github.com/adobe/aio-cli-plugin-cloudmanager#aio-cloudmanagerset-pipeline-variables-pipelineid)
