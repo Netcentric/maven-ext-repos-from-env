@@ -14,8 +14,9 @@
 
     <licenses>
         <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>Eclipse Public License, Version 2.0</name>
+            <url>https://www.eclipse.org/legal/epl-v20.html</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
 
@@ -27,7 +28,6 @@
             <organizationUrl>http://www.netcentric.biz/</organizationUrl>
         </developer>
     </developers>
-
 
     <scm>
         <connection>scm:git:git://github.com/netcentric/maven-ext-repos-from-env.git</connection>
