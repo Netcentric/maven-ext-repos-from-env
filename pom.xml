@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://mav en.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://mav en.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>biz.netcentric.maven.extension</groupId>
     <artifactId>maven-ext-repos-from-env</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <name>Maven Repository Config from System Env</name>
     <description>Adds maven repositories as found in system environment to execution environment</description>
@@ -32,7 +31,7 @@
     <scm>
         <connection>scm:git:git://github.com/netcentric/maven-ext-repos-from-env.git</connection>
         <developerConnection>scm:git:git@github.com:netcentric/maven-ext-repos-from-env.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>0.1.0</tag>
         <url>https://github.com/netcentric/maven-ext-repos-from-env/tree/master</url>
     </scm>
 
