@@ -11,7 +11,7 @@ In case the relevant environment variables are not set, this extension has no ef
 
 ## Simple Usage
 
-**Step 1: Configure the extension for your repository**
+### Step 1: Configure the extension for your repository
 
 In directory `.mvn`, create (or adjust) the file `extensions.xml`:
 
@@ -28,7 +28,7 @@ In directory `.mvn`, create (or adjust) the file `extensions.xml`:
 ```
 See [Maven documentation](https://maven.apache.org/configure.html#mvn-folder) for reference on how extensions can be activated.
 
-**Step 2: Setup the environment for your build**
+### Step 2: Setup the environment for your build
 
 The following environment variables can be set to have the Maven extension above automatically add both the repository (could be otherwise in `pom.xml` or in `settings.xml`) and the authentication for the server (would have to be configured in `settings.xml` without this extension):
 
@@ -62,11 +62,11 @@ For this case two repositories and two virutal server entries for are created.
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
-**Step 1: Configure the extension for your repository**
+### Step 1: Configure the extension for your repository
 
 Reference the Maven extension in the `.mvn/extensions.xml` file as described above.
 
-**Step 2: Setup the environment for your build using Adobe IO**
+### Step 2: Setup the environment for your build using Adobe IO
 
 *Prerequisites:*
 
