@@ -28,11 +28,17 @@ import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.Logger;
 
-/** <p>Adds maven repositories as found in system environment to execution environment.</p>
+/**
+ * <p>
+ * Adds maven repositories as found in system environment to execution environment.
+ * </p>
  * 
- *  <p><strong>This module is used by configuration only (not via Java API), 
- * see <a href="https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md">https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md</a>
- * </strong></p> */
+ * <p>
+ * <strong>This module is used by configuration only (not via Java API), see <a href=
+ * "https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md">https://github.com/Netcentric/maven-ext-repos-from-env/blob/develop/README.md</a>
+ * </strong>
+ * </p>
+ */
 @Named("configuration-processor")
 public class FromEnvReposConfigurationProcessor implements ConfigurationProcessor {
 
@@ -50,13 +56,13 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     private Logger logger;
 
     private boolean isVerbose;
-    
+
     @Override
     public void process(CliRequest cliRequest) throws Exception {
-        
+
         Map<String, String> sysEnv = System.getenv();
         isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
-        
+
         List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv);
 
         configureMavenExecution(cliRequest.getRequest(), reposFromEnv);
@@ -65,36 +71,36 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
     void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv) {
         if (!reposFromEnv.isEmpty()) {
-            
+
             logRepositoriesAndMirrors(request);
-            
+
             Profile repositoriesFromEnv = new Profile();
-    
+
             for (RepoFromEnv repoFromEnv : reposFromEnv) {
-    
+
                 repositoriesFromEnv.addRepository(getRepository(repoFromEnv));
-                
+
                 repositoriesFromEnv.addPluginRepository(getRepository(repoFromEnv));
-    
+
                 if (repoFromEnv.getUsername() != null) {
                     request.addServer(getServer(repoFromEnv));
-                } 
-                
+                }
+
                 // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
-                logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
-                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername(): "") + ")");
+                logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl() + " (id: " + repoFromEnv.getId()
+                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")");
             }
-    
+
             // activate profile
             repositoriesFromEnv.setId(PROFILE_ID_REPOSITORIES_FROM_ENV);
             request.addProfile(repositoriesFromEnv);
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
-            
+
         }
     }
 
     private void logMessage(String msg) {
-        if(isVerbose) {
+        if (isVerbose) {
             logger.info(msg);
         } else {
             logger.debug(msg);
@@ -107,7 +113,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         List<ArtifactRepository> pluginRepositories = request.getPluginArtifactRepositories();
         List<Mirror> mirrors = request.getMirrors();
         Function<? super ArtifactRepository, ? extends String> repoMapper = (ArtifactRepository repo) -> {
-            return repo.getId()+"("+repo.getUrl()+",releases:"+repo.getReleases()+",snapshots:"+repo.getSnapshots()+")";
+            return repo.getId() + "(" + repo.getUrl() + ",releases:" + repo.getReleases() + ",snapshots:" + repo.getSnapshots() + ")";
         };
         logMessage("Configured in settings.xml:\nrepositores:\n  " +
                 repositories.stream().map(repoMapper).collect(Collectors.joining(",  \n"))
@@ -117,13 +123,13 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                         : "")
                 + (mirrors != null && !mirrors.isEmpty()
                         ? "\nmirrors:\n  "
-                                + mirrors.stream().map(mirror -> mirror.getId() + "(mirrorOf:" + mirror.getMirrorOf() + ",url=" + mirror.getUrl() + ")")
+                                + mirrors.stream().map(
+                                        mirror -> mirror.getId() + "(mirrorOf:" + mirror.getMirrorOf() + ",url=" + mirror.getUrl() + ")")
                                         .collect(Collectors.joining(",  \n"))
-                        : ""))
-        ;      
+                        : ""));
 
     }
-    
+
     private Repository getRepository(RepoFromEnv repoFromEnv) {
         Repository repository = new Repository();
         repository.setId(repoFromEnv.getId());
@@ -145,7 +151,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         server.setPassword(repoFromEnv.getPassword());
         return server;
     }
-    
+
     List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv) {
 
         return systemEnv.keySet().stream()
@@ -162,16 +168,18 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                     String username = systemEnv.get(usernameProp);
                     String passwordProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_PASSWORD;
                     String password = systemEnv.get(passwordProp);
-                    if(!isBlank(username) && isBlank(password)) {
-                        throw new IllegalArgumentException("If property "+usernameProp+" is set, password property "+passwordProp+ " also has to be set along with it");
+                    if (!isBlank(username) && isBlank(password)) {
+                        throw new IllegalArgumentException("If property " + usernameProp + " is set, password property " + passwordProp
+                                + " also has to be set along with it");
                     }
-                    if(!isBlank(url)) {
-                        if(isBlank(username)) {
-                            logMessage("Repository "+url+" has NOT configured credentials (env variables "+usernameProp+" and "+passwordProp + " are missing)");
+                    if (!isBlank(url)) {
+                        if (isBlank(username)) {
+                            logMessage("Repository " + url + " has NOT configured credentials (env variables " + usernameProp + " and "
+                                    + passwordProp + " are missing)");
                         }
                         return new RepoFromEnv(id, url, username, password);
                     } else {
-                        logMessage("Property "+urlProp+" is configured but blank, not adding a repository");
+                        logMessage("Property " + urlProp + " is configured but blank, not adding a repository");
                         return null;
                     }
                 })
@@ -181,7 +189,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     }
 
     private boolean isBlank(String str) {
-        return str==null || str.trim().isEmpty();
+        return str == null || str.trim().isEmpty();
     }
 
 }
