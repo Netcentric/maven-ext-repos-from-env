@@ -1,3 +1,5 @@
+![](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
+
 # Maven Extension: Repos from System Env
 
 This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). 
