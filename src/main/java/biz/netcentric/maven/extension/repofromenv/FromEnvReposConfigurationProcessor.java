@@ -60,18 +60,15 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     
             for (RepoFromEnv repoFromEnv : reposFromEnv) {
     
-                Repository repository = getRepository(repoFromEnv);
+                repositoriesFromEnv.addRepository(getRepository(repoFromEnv));
+                
+                repositoriesFromEnv.addPluginRepository(getRepository(repoFromEnv));
     
-                repositoriesFromEnv.addRepository(repository);
-    
-                if (repoFromEnv.getUsername() != null && repoFromEnv.getPassword() != null) {
-                    Server server = new Server();
-                    server.setId(repoFromEnv.getId());
-                    server.setUsername(repoFromEnv.getUsername());
-                    server.setPassword(repoFromEnv.getPassword());
-                    request.addServer(server);
+                if (repoFromEnv.getUsername() != null) {
+                    request.addServer(getServer(repoFromEnv));
                 }
-                logger.debug("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
+                
+                logger.info("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
                         + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername(): "") + ")");
             }
     
@@ -79,8 +76,10 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             repositoriesFromEnv.setId(PROFILE_ID_REPOSITORIES_FROM_ENV);
             request.addProfile(repositoriesFromEnv);
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
+            
         }
     }
+
 
     private Repository getRepository(RepoFromEnv repoFromEnv) {
         Repository repository = new Repository();
@@ -96,6 +95,14 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         return repository;
     }
 
+    private Server getServer(RepoFromEnv repoFromEnv) {
+        Server server = new Server();
+        server.setId(repoFromEnv.getId());
+        server.setUsername(repoFromEnv.getUsername());
+        server.setPassword(repoFromEnv.getPassword());
+        return server;
+    }
+    
     List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv) {
 
         return systemEnv.keySet().stream()
