@@ -1,4 +1,4 @@
-![](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
+![Java CI/CD](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/CD/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
 
 # Maven Extension: Repos from System Env
 
