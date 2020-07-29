@@ -11,6 +11,7 @@ package biz.netcentric.maven.extension.repofromenv;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -79,8 +80,8 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                     request.addServer(getServer(repoFromEnv));
                 } 
                 
-                // minimal line that we always log (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
-                logger.info("Repository from system env: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
+                // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
+                logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl() + " (id: "+repoFromEnv.getId() 
                         + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername(): "") + ")");
             }
     
@@ -92,7 +93,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         }
     }
 
-    private void logVerbose(String msg) {
+    private void logMessage(String msg) {
         if(isVerbose) {
             logger.info(msg);
         } else {
@@ -105,14 +106,20 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         List<ArtifactRepository> repositories = request.getRemoteRepositories();
         List<ArtifactRepository> pluginRepositories = request.getPluginArtifactRepositories();
         List<Mirror> mirrors = request.getMirrors();
-        logVerbose("Configured in settings.xml: repositores: "+
-                repositories.stream().map(ArtifactRepository::getId).collect(Collectors.joining(",")) 
-                + (pluginRepositories != null && !pluginRepositories.isEmpty() ? 
-                        " plugin repositories: "+pluginRepositories.stream().map(ArtifactRepository::getId).collect(Collectors.joining(",")) 
+        Function<? super ArtifactRepository, ? extends String> repoMapper = (ArtifactRepository repo) -> {
+            return repo.getId()+"("+repo.getUrl()+",releases:"+repo.getReleases()+",snapshots:"+repo.getSnapshots()+")";
+        };
+        logMessage("Configured in settings.xml:\nrepositores:\n  " +
+                repositories.stream().map(repoMapper).collect(Collectors.joining(",  \n"))
+                + (pluginRepositories != null && !pluginRepositories.isEmpty()
+                        ? "\nplugin repositories:\n  "
+                                + pluginRepositories.stream().map(repoMapper).collect(Collectors.joining(",  \n"))
                         : "")
-                + (mirrors != null && !mirrors.isEmpty() ? 
-                " mirrors: "+mirrors.stream().map(mirror -> mirror.getId() + "("+mirror.getMirrorOf()+","+mirror.getUrl()+")").collect(Collectors.joining(","))
-                : ""))
+                + (mirrors != null && !mirrors.isEmpty()
+                        ? "\nmirrors:\n  "
+                                + mirrors.stream().map(mirror -> mirror.getId() + "(mirrorOf:" + mirror.getMirrorOf() + ",url=" + mirror.getUrl() + ")")
+                                        .collect(Collectors.joining(",  \n"))
+                        : ""))
         ;      
 
     }
@@ -160,11 +167,11 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                     }
                     if(!isBlank(url)) {
                         if(isBlank(username)) {
-                            logVerbose("Repository "+url+" has NOT configured credentials (env variables "+usernameProp+" and "+passwordProp + " are missing)");
+                            logMessage("Repository "+url+" has NOT configured credentials (env variables "+usernameProp+" and "+passwordProp + " are missing)");
                         }
                         return new RepoFromEnv(id, url, username, password);
                     } else {
-                        logVerbose("Property "+urlProp+" is configured but blank, not adding a repository");
+                        logMessage("Property "+urlProp+" is configured but blank, not adding a repository");
                         return null;
                     }
                 })
