@@ -32,6 +32,8 @@ See [Maven documentation](https://maven.apache.org/configure.html#mvn-folder) fo
 
 ### Step 2: Setup the environment for your build
 
+#### Remote https repo using credentials
+
 The following environment variables can be set to have the Maven extension above automatically add both the repository (could be otherwise in `pom.xml` or in `settings.xml`) and the authentication for the server (would have to be configured in `settings.xml` without this extension):
 
 ```
@@ -40,13 +42,17 @@ export MVN_SETTINGS_REPO_USERNAME=username
 export MVN_SETTINGS_REPO_PASSWORD=password
 ```
 
+#### Remote https repo without authentication
+
 For the case no authentication is necessary, setting only one env variable is sufficient:
 
 ```
-export MVN_SETTINGS_REPO_URL=https://repo.myorg.com/path/to/repo/no_auth
+export MVN_SETTINGS_REPO_URL=https://repo.myorg.com/path/to/repo_no_auth
 ```
 
 For this case, no virtual `server` entry is generated for this server.
+
+#### Using multiple repositories
 
 It is also possible to use multiple repositories:
 
@@ -60,7 +66,12 @@ export MVN_SETTINGS_REPO_NAME2_URL=https://repo.myorg.com/path/to/repo
 export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
 export MVN_SETTINGS_REPO_NAME12_PASSWORD=password2
 ```
-For this case two repositories and two virutal server entries for are created.
+
+For this case two repositories and two virtual server entries for are created.
+
+#### Using file repositories
+
+As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/.mvn/repository`. This approch can be useful for parent poms.
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
