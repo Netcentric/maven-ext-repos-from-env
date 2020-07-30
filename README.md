@@ -4,12 +4,12 @@
 
 This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). 
 
-While most of the time settings the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to use this extension. 
+While most of the time setting the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to configure this extension. 
 
 In case the relevant environment variables are not set, this extension has no effect. This allows to 
 
 * Minimise the changes in the regular project setup (only the extension has to be added, all mirrors, repositories from `settings.xml` may remain active for local developers or CI servers)
-* For constraint build environments (without full control over the `settings.xml` file), the environment variables can be set (and hence the repo/credentials automatically become active)
+* For constraint build environments (without full control over the `settings.xml` file), the environment variables can be set and for this case the repositories/credentials automatically become active
 
 ## Simple Usage
 
