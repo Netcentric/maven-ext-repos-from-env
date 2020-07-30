@@ -67,11 +67,11 @@ export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
 export MVN_SETTINGS_REPO_NAME12_PASSWORD=password2
 ```
 
-For this case two repositories and two virutal server entries for are created.
+For this case two repositories and two virtual server entries for are created.
 
 #### Using file repositories
 
-As generally true for maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/.mvn/repository`. This approch can be useful for parent poms.
+As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/.mvn/repository`. This approch can be useful for parent poms.
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
