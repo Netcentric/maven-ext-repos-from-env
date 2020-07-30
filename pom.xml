@@ -5,7 +5,7 @@
 
     <groupId>biz.netcentric.maven.extension</groupId>
     <artifactId>maven-ext-repos-from-env</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>Maven Repository Config from System Env</name>
     <description>Adds maven repositories as found in system environment to execution environment</description>
@@ -31,7 +31,7 @@
     <scm>
         <connection>scm:git:git://github.com/netcentric/maven-ext-repos-from-env.git</connection>
         <developerConnection>scm:git:git@github.com:netcentric/maven-ext-repos-from-env.git</developerConnection>
-        <tag>1.0.0</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/netcentric/maven-ext-repos-from-env/tree/master</url>
     </scm>
 
