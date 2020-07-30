@@ -1,4 +1,4 @@
-![Java CI/CD](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/CD/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env/badge.svg)](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env) ![Java CI/CD](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/CD/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
 
 # Maven Extension: Repos from System Env
 
@@ -29,6 +29,8 @@ In directory `.mvn`, create (or adjust) the file `extensions.xml`:
 
 ```
 See [Maven documentation](https://maven.apache.org/configure.html#mvn-folder) for reference on how extensions can be activated.
+
+The artifact is available at [Maven Central](https://search.maven.org/search?q=g:biz.netcentric.maven.extension%20AND%20a:maven-ext-repos-from-env).
 
 ### Step 2: Setup the environment for your build
 
