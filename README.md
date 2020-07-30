@@ -73,6 +73,15 @@ For this case two repositories and two virtual server entries for are created.
 
 As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/.mvn/repository`. This approch can be useful for parent poms.
 
+#### Use verbose mode
+
+With the environment variable `MVN_SETTINGS_REPO_LOG_VERBOSE`, some more logging can be activated:
+
+```
+export MVN_SETTINGS_REPO_LOG_VERBOSE=true
+```
+
+
 ## Usage with Adobe Experience Manager Cloud Manager
 
 ### Step 1: Configure the extension for your repository
