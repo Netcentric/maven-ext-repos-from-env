@@ -73,7 +73,9 @@ For this case two repositories and two virtual server entries for are created.
 
 #### Using file repositories
 
-As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/.mvn/repository`. This approch can be useful for parent poms.
+As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/vendor1/repository`. If the directory `.mvn/repository` exists, it is automatically added as file repository.
+
+This approach can be useful for parent poms.
 
 #### Use verbose mode
 
