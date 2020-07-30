@@ -8,6 +8,7 @@
  */
 package biz.netcentric.maven.extension.repofromenv;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +20,7 @@ import javax.inject.Named;
 
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.cli.CliRequest;
+import org.apache.maven.cli.MavenCli;
 import org.apache.maven.cli.configuration.ConfigurationProcessor;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.model.Profile;
@@ -52,6 +54,9 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
     static final String ENV_PROP_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
 
+    static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
+    static final String PATH_IMPLICIT_FILE_REPO = ".mvn/repository";
+
     @Inject
     private Logger logger;
 
@@ -62,8 +67,10 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
         Map<String, String> sysEnv = System.getenv();
         isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
-
-        List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv);
+        
+        List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv, cliRequest.getMultiModuleProjectDirectory());
+        
+        addImplicitFileRepo(reposFromEnv, cliRequest.getMultiModuleProjectDirectory());
 
         configureMavenExecution(cliRequest.getRequest(), reposFromEnv);
 
@@ -85,10 +92,6 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                 if (repoFromEnv.getUsername() != null) {
                     request.addServer(getServer(repoFromEnv));
                 }
-
-                // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
-                logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl() + " (id: " + repoFromEnv.getId()
-                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")");
             }
 
             // activate profile
@@ -152,9 +155,9 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         return server;
     }
 
-    List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv) {
+    List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv, File reactorRootDir) {
 
-        return systemEnv.keySet().stream()
+        List<RepoFromEnv> reposFromEnv = systemEnv.keySet().stream()
                 .filter(Objects::nonNull)
                 .filter(key -> key.startsWith(ENV_PROP_PREFIX_MVN_SETTINGS_REPO) && key.endsWith(ENV_PROP_SUFFIX_URL))
                 .map(key -> key.substring(ENV_PROP_PREFIX_MVN_SETTINGS_REPO.length(), key.length() - ENV_PROP_SUFFIX_URL.length()))
@@ -177,6 +180,12 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                             logMessage("Repository " + url + " has NOT configured credentials (env variables " + usernameProp + " and "
                                     + passwordProp + " are missing)");
                         }
+                        if(url.contains(VAR_EXPR_MULTIMODULE_PROJECT_DIR)) {
+                            String reactorRootDirPath = reactorRootDir.getAbsolutePath();
+                            url = url.replace(VAR_EXPR_MULTIMODULE_PROJECT_DIR, reactorRootDirPath);
+                            logMessage("Replaced "+VAR_EXPR_MULTIMODULE_PROJECT_DIR+" in url with "+reactorRootDirPath);
+                        }
+                        
                         return new RepoFromEnv(id, url, username, password);
                     } else {
                         logMessage("Property " + urlProp + " is configured but blank, not adding a repository");
@@ -185,9 +194,26 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        
+        reposFromEnv.stream().forEach(repoFromEnv -> 
+            // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
+            logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl()  + " (id: " + repoFromEnv.getId() + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")")
+        );
+        
+        return reposFromEnv;
 
     }
 
+
+    void addImplicitFileRepo(List<RepoFromEnv> reposFromEnv, File multiModuleProjectDirectory) {
+        File implicitRepo = new File(multiModuleProjectDirectory, PATH_IMPLICIT_FILE_REPO);
+        if(implicitRepo.exists()) {
+            reposFromEnv.add(new RepoFromEnv(PATH_IMPLICIT_FILE_REPO, implicitRepo.toURI().toString(), null, null));
+            logger.info("Implicit file repository added for directory " + PATH_IMPLICIT_FILE_REPO);
+        }
+    }
+
+    
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
     }
