@@ -77,7 +77,7 @@ As generally true for Maven repositories, it is also possible to use file urls. 
 
 This approach can be useful for parent poms.
 
-#### Use verbose mode
+#### Using the verbose logging mode
 
 With the environment variable `MVN_SETTINGS_REPO_LOG_VERBOSE`, some more logging can be activated:
 
