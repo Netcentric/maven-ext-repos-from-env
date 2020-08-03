@@ -55,7 +55,8 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     static final String ENV_PROP_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
 
     static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
-    static final String PATH_IMPLICIT_FILE_REPO = ".mvn/repository";
+    static final String IMPLICIT_FILE_REPO_PATH = ".mvn/repository";
+    static final String IMPLICIT_FILE_REPO_ID = "repository-in-mvn-ext-folder";
 
     @Inject
     private Logger logger;
@@ -206,10 +207,10 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
 
     void addImplicitFileRepo(List<RepoFromEnv> reposFromEnv, File multiModuleProjectDirectory) {
-        File implicitRepo = new File(multiModuleProjectDirectory, PATH_IMPLICIT_FILE_REPO);
+        File implicitRepo = new File(multiModuleProjectDirectory, IMPLICIT_FILE_REPO_PATH);
         if(implicitRepo.exists()) {
-            reposFromEnv.add(new RepoFromEnv(PATH_IMPLICIT_FILE_REPO, implicitRepo.toURI().toString(), null, null));
-            logger.info("Implicit file repository added for directory " + PATH_IMPLICIT_FILE_REPO);
+            reposFromEnv.add(new RepoFromEnv(IMPLICIT_FILE_REPO_ID, implicitRepo.toURI().toString(), null, null));
+            logger.info("Implicit file repository added for directory " + IMPLICIT_FILE_REPO_PATH);
         }
     }
 
