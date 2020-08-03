@@ -23,7 +23,7 @@ In directory `.mvn`, create (or adjust) the file `extensions.xml`:
     <extension>
         <groupId>biz.netcentric.maven.extension</groupId>
         <artifactId>maven-ext-repos-from-env</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </extension>
 </extensions>
 
