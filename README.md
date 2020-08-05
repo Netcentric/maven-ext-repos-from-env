@@ -66,7 +66,7 @@ export MVN_SETTINGS_REPO_NAME1_PASSWORD=password1
 # REPO_NAME2
 export MVN_SETTINGS_REPO_NAME2_URL=https://repo.myorg.com/path/to/repo
 export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
-export MVN_SETTINGS_REPO_NAME12_PASSWORD=password2
+export MVN_SETTINGS_REPO_NAME2_PASSWORD=password2
 ```
 
 For this case two repositories and two virtual server entries for are created.
