@@ -53,27 +53,24 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     static final String REPO_ID_PREFIX = "sysEnvRepo";
 
     static final String ENV_PROP_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
-    static final String MVN_SETTINGS_ADD_DEFAULT_REPOS = "MVN_SETTINGS_ADD_DEFAULT_REPOS";
+    static final String ENV_PROP_ENV_REPOS_FIRST = "MVN_SETTINGS_ENV_REPOS_FIRST";
 
     static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
     static final String IMPLICIT_FILE_REPO_PATH = ".mvn/repository";
     static final String IMPLICIT_FILE_REPO_ID = "repository-in-mvn-ext-folder";
 
-    static final String MAVEN_CENTRAL_ID = "central";
-    static final String MAVEN_CENTRAL_URL = "https://repo.maven.apache.org/maven2";
-    
     @Inject
     private Logger logger;
 
     private boolean isVerbose;
-    private boolean addDefaultRepos;
+    private boolean envReposFirst;
 
     @Override
     public void process(CliRequest cliRequest) throws Exception {
 
         Map<String, String> sysEnv = System.getenv();
         isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
-        addDefaultRepos = sysEnv.containsKey(MVN_SETTINGS_ADD_DEFAULT_REPOS) ? Boolean.valueOf(sysEnv.get(MVN_SETTINGS_ADD_DEFAULT_REPOS)) : Boolean.TRUE;
+        envReposFirst = Boolean.valueOf(sysEnv.get(ENV_PROP_ENV_REPOS_FIRST));
         
         List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv, cliRequest.getMultiModuleProjectDirectory());
         
@@ -89,23 +86,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             logRepositoriesAndMirrors(request);
 
             Profile repositoriesFromEnv = new Profile();
-            
-            if(addDefaultRepos) {
-                logMessage("Adding default repositories (central and as configured in settings.xml)");
-                // also add default repositories for performance reasons (they are still only requested once, but before the ones from env)
-                
-                // maven central
-                repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(MAVEN_CENTRAL_ID, MAVEN_CENTRAL_URL, null, null)));
-                
-                // from settings.xml
-                List<ArtifactRepository> repositories = request.getRemoteRepositories();
-                repositories.stream().forEach( r -> 
-                    repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(r.getId(), r.getUrl(), null, null))));
-                List<ArtifactRepository> pluginRepositories = request.getPluginArtifactRepositories();
-                pluginRepositories.stream().forEach( r ->  
-                    repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(r.getId(), r.getUrl(), null, null))));                
-            }
-            
+
             // add the maven repos 
             for (RepoFromEnv repoFromEnv : reposFromEnv) {
 
@@ -120,7 +101,14 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
             // activate profile
             repositoriesFromEnv.setId(PROFILE_ID_REPOSITORIES_FROM_ENV);
-            request.addProfile(repositoriesFromEnv);
+            if(envReposFirst) {
+                logMessage("Repos from system env are ordered *before* default repositories from settings.xml (" + ENV_PROP_ENV_REPOS_FIRST + "=true)");
+                request.addProfile(repositoriesFromEnv);
+            } else {
+                logMessage("Repos from system env are ordered *after* default repositories from settings.xml (" + ENV_PROP_ENV_REPOS_FIRST + "=false)");
+                request.getProfiles().add(0, repositoriesFromEnv);
+            }
+            
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
 
         }
@@ -182,7 +170,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv, File reactorRootDir) {
 
         List<RepoFromEnv> reposFromEnv = systemEnv.keySet().stream()
-                .filter(Objects::nonNull)
+                .filter(Objects::nonNull).sorted()
                 .filter(key -> key.startsWith(ENV_PROP_PREFIX_MVN_SETTINGS_REPO) && key.endsWith(ENV_PROP_SUFFIX_URL))
                 .map(key -> key.substring(ENV_PROP_PREFIX_MVN_SETTINGS_REPO.length(), key.length() - ENV_PROP_SUFFIX_URL.length()))
                 .map(repoEnvNameInKey -> {
@@ -232,7 +220,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     void addImplicitFileRepo(List<RepoFromEnv> reposFromEnv, File multiModuleProjectDirectory) {
         File implicitRepo = new File(multiModuleProjectDirectory, IMPLICIT_FILE_REPO_PATH);
         if(implicitRepo.exists()) {
-            reposFromEnv.add(new RepoFromEnv(IMPLICIT_FILE_REPO_ID, implicitRepo.toURI().toString(), null, null));
+            reposFromEnv.add(0, new RepoFromEnv(IMPLICIT_FILE_REPO_ID, implicitRepo.toURI().toString(), null, null));
             logger.info("Implicit file repository added for directory " + IMPLICIT_FILE_REPO_PATH);
         }
     }
