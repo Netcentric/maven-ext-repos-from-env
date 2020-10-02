@@ -53,21 +53,27 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     static final String REPO_ID_PREFIX = "sysEnvRepo";
 
     static final String ENV_PROP_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
+    static final String MVN_SETTINGS_ADD_DEFAULT_REPOS = "MVN_SETTINGS_ADD_DEFAULT_REPOS";
 
     static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
     static final String IMPLICIT_FILE_REPO_PATH = ".mvn/repository";
     static final String IMPLICIT_FILE_REPO_ID = "repository-in-mvn-ext-folder";
 
+    static final String MAVEN_CENTRAL_ID = "central";
+    static final String MAVEN_CENTRAL_URL = "https://repo.maven.apache.org/maven2";
+    
     @Inject
     private Logger logger;
 
     private boolean isVerbose;
+    private boolean addDefaultRepos;
 
     @Override
     public void process(CliRequest cliRequest) throws Exception {
 
         Map<String, String> sysEnv = System.getenv();
         isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
+        addDefaultRepos = sysEnv.containsKey(MVN_SETTINGS_ADD_DEFAULT_REPOS) ? Boolean.valueOf(sysEnv.get(MVN_SETTINGS_ADD_DEFAULT_REPOS)) : Boolean.TRUE;
         
         List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv, cliRequest.getMultiModuleProjectDirectory());
         
@@ -83,7 +89,24 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             logRepositoriesAndMirrors(request);
 
             Profile repositoriesFromEnv = new Profile();
-
+            
+            if(addDefaultRepos) {
+                logMessage("Adding default repositories (central and as configured in settings.xml)");
+                // also add default repositories for performance reasons (they are still only requested once, but before the ones from env)
+                
+                // maven central
+                repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(MAVEN_CENTRAL_ID, MAVEN_CENTRAL_URL, null, null)));
+                
+                // from settings.xml
+                List<ArtifactRepository> repositories = request.getRemoteRepositories();
+                repositories.stream().forEach( r -> 
+                    repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(r.getId(), r.getUrl(), null, null))));
+                List<ArtifactRepository> pluginRepositories = request.getPluginArtifactRepositories();
+                pluginRepositories.stream().forEach( r ->  
+                    repositoriesFromEnv.addRepository(getRepository(new RepoFromEnv(r.getId(), r.getUrl(), null, null))));                
+            }
+            
+            // add the maven repos 
             for (RepoFromEnv repoFromEnv : reposFromEnv) {
 
                 repositoriesFromEnv.addRepository(getRepository(repoFromEnv));

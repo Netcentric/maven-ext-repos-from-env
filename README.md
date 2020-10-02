@@ -85,6 +85,13 @@ With the environment variable `MVN_SETTINGS_REPO_LOG_VERBOSE`, some more logging
 export MVN_SETTINGS_REPO_LOG_VERBOSE=true
 ```
 
+#### Using a mirror repository
+
+By default, the default repositories (Maven Central and the configured repositories from settings.xml) are also added to ensure those are queried first to ensure best performance. In case the configured repository is a mirror repository and can answer all requests from the build, this behaviour can be explicitly turned off (`MVN_SETTINGS_ADD_DEFAULT_REPOS` is `true ` by default):
+
+```
+export MVN_SETTINGS_ADD_DEFAULT_REPOS=false
+```
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
