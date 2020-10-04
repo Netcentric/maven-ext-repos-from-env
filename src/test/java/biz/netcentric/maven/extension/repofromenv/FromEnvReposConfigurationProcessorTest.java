@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
@@ -49,16 +50,16 @@ class FromEnvReposConfigurationProcessorTest {
 
     @Mock 
     private MavenExecutionRequest mavenExecutionRequest;
-    
-    @Captor
-    private ArgumentCaptor<Profile> profileCaptor;
 
     @Captor
     private ArgumentCaptor<Server> serverCaptor;
     
+    private List<Profile> profiles = new ArrayList<>();
+    
     @BeforeEach
     void setup() {
         initMocks(this);
+        when(mavenExecutionRequest.getProfiles()).thenReturn(profiles);
     }
 
     @Test
@@ -203,10 +204,10 @@ class FromEnvReposConfigurationProcessorTest {
                         new RepoFromEnv(repoId, repoUrl, repoUser, repoPw),
                         new RepoFromEnv(repo2Id, repo2Url, null, null)));
         
-        verify(mavenExecutionRequest, times(1)).addProfile(profileCaptor.capture());
         verify(mavenExecutionRequest, times(1)).addServer(serverCaptor.capture());
         
-        Profile profile = profileCaptor.getValue();
+        assertEquals(1, profiles.size());
+        Profile profile = profiles.get(0);
         assertEquals(FromEnvReposConfigurationProcessor.PROFILE_ID_REPOSITORIES_FROM_ENV, profile.getId());
         assertEquals(2, profile.getRepositories().size());
         Repository repo1 = profile.getRepositories().get(0);

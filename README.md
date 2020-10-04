@@ -69,7 +69,7 @@ export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
 export MVN_SETTINGS_REPO_NAME2_PASSWORD=password2
 ```
 
-For this case two repositories and two virtual server entries for are created.
+For this case two repositories and two virtual server entries for are created. The order can be important for performance reasons, the repositories are added in natural order of their names (alphabetical). 
 
 #### Using file repositories
 
@@ -85,6 +85,15 @@ With the environment variable `MVN_SETTINGS_REPO_LOG_VERBOSE`, some more logging
 export MVN_SETTINGS_REPO_LOG_VERBOSE=true
 ```
 
+#### Using a mirror repository
+
+By default, the repositories as configured in env are queried **after** the default repositories in settings.xml. For the case that the system env repo is a mirror repository (containing all required artifacts), it can be forced to be used first (before the repositories from settings.xml).
+
+```
+export MVN_SETTINGS_ENV_REPOS_FIRST=true
+```
+
+Setting this flag is only relevant for performance reasons, the overall build will work with or without this flag.
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
