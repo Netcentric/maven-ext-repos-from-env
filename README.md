@@ -106,6 +106,8 @@ Reference the Maven extension in the `.mvn/extensions.xml` file as described abo
 *Prerequisites:*
 
 * Add the `Cloud Manager API` to your Adobe IO project at [https://console.adobe.io/](https://console.adobe.io/)
+  * Add a Service Account (JWT based) by either uploading a public key (from a manually generated private/public key pair) or letting the wizard generate both private and public key for you. In both cases make sure to store the private key in a safe place.
+  * Setting environment variables requires [permissions of role `Deployment Manager`](https://www.adobe.io/apis/experiencecloud/cloud-manager/docs.html#!AdobeDocs/cloudmanager-api-docs/master/permissions.md) so make sure that the service account has at least that permission
 * Install [aio-cli](https://github.com/adobe/aio-cli/blob/master/README.md#usage)
 * Setup Adobe IO CLI in general [Getting Started](https://www.adobe.io/apis/experienceplatform/project-firefly/docs.html#!AdobeDocs/project-firefly/master/getting_started/setup.md)
 * Install [aio-cli-plugin-cloudmanager](https://github.com/adobe/aio-cli-plugin-cloudmanager#installation)
