@@ -58,6 +58,8 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
     static final String IMPLICIT_FILE_REPO_PATH = ".mvn/repository";
     static final String IMPLICIT_FILE_REPO_ID = "repository-in-mvn-ext-folder";
+    
+    static final String ENV_PROP_DISABLE_BYPASS_MIRRORS = "MVN_DISABLE_BYPASS_MIRRORS";
 
     @Inject
     private Logger logger;
@@ -110,10 +112,24 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             }
             
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
-
+            
+            boolean disableBypassMirrors = Boolean.getBoolean(ENV_PROP_DISABLE_BYPASS_MIRRORS);
+            if (!disableBypassMirrors) {
+                bypassMirrorsForRepositoryIds(request, reposFromEnv.stream().map(RepoFromEnv::getId).collect(Collectors.toList()));
+            }
         }
     }
 
+    private void bypassMirrorsForRepositoryIds(MavenExecutionRequest request, List<String> repositoryIds) {
+        String mirrorOfSuffix = repositoryIds.stream().map(id -> "!" + id).collect(Collectors.joining(","));
+        for (Mirror mirror : request.getMirrors()) {
+            String mirrorOf = mirror.getMirrorOf() != null ? mirror.getMirrorOf() + "," : "";
+            mirrorOf += mirrorOfSuffix;
+            mirror.setMirrorOf(mirrorOf);
+            logMessage("Reconfigured mirror " + mirror.getId() + " to only act as mirror of " + mirrorOf);
+        }
+    }
+ 
     private void logMessage(String msg) {
         if (isVerbose) {
             logger.info(msg);

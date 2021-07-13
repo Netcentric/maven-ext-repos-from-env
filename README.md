@@ -85,9 +85,13 @@ With the environment variable `MVN_SETTINGS_REPO_LOG_VERBOSE`, some more logging
 export MVN_SETTINGS_REPO_LOG_VERBOSE=true
 ```
 
-#### Using a mirror repository
+#### Bypassing mirrors
 
-By default, the repositories as configured in env are queried **after** the default repositories in settings.xml. For the case that the system env repo is a mirror repository (containing all required artifacts), it can be forced to be used first (before the repositories from settings.xml).
+In case the `settings.xml` defines one or multiple mirrors, those are automatically disabled for the newly added repositories by adding their ids to the `mirrorOf` value with a leading `!` as documented in [Advanced Mirror Specification](https://maven.apache.org/guides/mini/guide-mirror-settings.html#advanced-mirror-specification). To disable this mirror bypass set the environment variable `MVN_DISABLE_BYPASS_MIRRORS` to `true`.
+
+#### Repository order
+
+By default, the repositories as configured in env are queried **after** the default repositories in settings.xml. For the case that the system env repo is also a proxy repository for Maven Central (i.e. containing all required artifacts), it can be forced to be used first (before the repositories from settings.xml).
 
 ```
 export MVN_SETTINGS_ENV_REPOS_FIRST=true
