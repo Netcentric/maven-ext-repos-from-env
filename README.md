@@ -2,14 +2,16 @@
 
 # Maven Extension: Repos from System Env
 
-This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details [below](#using-file-repositories)).
+This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level environment variables or Java system properties (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details [below](#using-file-repositories)).
 
 While most of the time setting the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to configure this extension. 
 
 In case the relevant environment variables are not set this extension has no effect (apart from the implicit file repo `.mvn/repository` if it exists). This allows to 
 
 * Minimise the changes in the regular project setup (only the extension has to be added, all mirrors, repositories from `settings.xml` may remain active for local developers or CI servers)
-* For constraint build environments (without full control over the `settings.xml` file), the environment variables can be set and for this case the repositories/credentials automatically become active
+* Add additional repositories with the help of environment variables or system properties. 
+
+This is helpful for constrained build environments (without full control over the `settings.xml` file) and also to enforce a common repository across all developers without additional manual set up.
 
 ## Simple Usage
 
@@ -28,11 +30,13 @@ In directory `.mvn`, create (or adjust) the file `extensions.xml`:
 </extensions>
 
 ```
-See [Maven documentation](https://maven.apache.org/configure.html#mvn-folder) for reference on how extensions can be activated.
+See [Maven documentation](https://maven.apache.org/configure.html#mvn-extensions-xml-file) for reference on how extensions can be activated.
 
 The artifact is available at [Maven Central](https://search.maven.org/search?q=g:biz.netcentric.maven.extension%20AND%20a:maven-ext-repos-from-env).
 
-### Step 2: Setup the environment for your build
+### Step 2: Setup the environment variables or system properties for your build
+
+In all the following examples environment variables are used, but this extension can also be configured with Java system properties having the same name as the environment variables. In case both a variable and property are given with the same name the system property takes precedence.
 
 #### Remote https repo using credentials
 
@@ -98,6 +102,18 @@ export MVN_SETTINGS_ENV_REPOS_FIRST=true
 ```
 
 Setting this flag is only relevant for performance reasons, the overall build will work with or without this flag.
+
+#### Distribute configuration with code
+
+In case environment variables are too much effort to set one can also leverage the [`.mvn/jvm.config` file](https://maven.apache.org/configure.html#mvn-jvm-config-file) to set the configuration via [Java system properties](https://docs.oracle.com/javase/tutorial/essential/environment/sysprop.html).
+
+An example file might look like this
+
+```
+-DMVN_SETTINGS_REPO_NAME1_URL=https://repo.myorg.com/path/to/repo -DMVN_SETTINGS_REPO_NAME1_USERNAME=username1 -DMVN_SETTINGS_REPO_NAME1_PASSWORD=password1
+```
+
+Such a configuration can be distributed through the SCM along with the code (in case the values are not supposed to be treated as secrets).
 
 ## Usage with Adobe Experience Manager Cloud Manager
 
