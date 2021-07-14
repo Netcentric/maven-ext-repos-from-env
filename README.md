@@ -2,7 +2,7 @@
 
 # Maven Extension: Repos from System Env
 
-This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details in [below](#using-file-repositories)).
+This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details [below](#using-file-repositories)).
 
 While most of the time setting the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to configure this extension. 
 
