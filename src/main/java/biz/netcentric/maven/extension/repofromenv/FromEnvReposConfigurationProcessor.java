@@ -73,16 +73,16 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         Map<String, String> sysEnv = System.getenv();
         isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
         envReposFirst = Boolean.valueOf(sysEnv.get(ENV_PROP_ENV_REPOS_FIRST));
-        
+        boolean disableBypassMirrors = Boolean.valueOf(sysEnv.get(ENV_PROP_DISABLE_BYPASS_MIRRORS));
         List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv, cliRequest.getMultiModuleProjectDirectory());
         
         addImplicitFileRepo(reposFromEnv, cliRequest.getMultiModuleProjectDirectory());
 
-        configureMavenExecution(cliRequest.getRequest(), reposFromEnv);
+        configureMavenExecution(cliRequest.getRequest(), reposFromEnv, disableBypassMirrors);
 
     }
 
-    void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv) {
+    void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv, boolean disableBypassMirrors) {
         if (!reposFromEnv.isEmpty()) {
 
             logRepositoriesAndMirrors(request);
@@ -113,7 +113,6 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             
             request.addActiveProfile(PROFILE_ID_REPOSITORIES_FROM_ENV);
             
-            boolean disableBypassMirrors = Boolean.getBoolean(ENV_PROP_DISABLE_BYPASS_MIRRORS);
             if (!disableBypassMirrors) {
                 bypassMirrorsForRepositoryIds(request, reposFromEnv.stream().map(RepoFromEnv::getId).collect(Collectors.toList()));
             }
@@ -241,7 +240,6 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         }
     }
 
-    
     private boolean isBlank(String str) {
         return str == null || str.trim().isEmpty();
     }

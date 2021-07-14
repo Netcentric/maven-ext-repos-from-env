@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.model.Profile;
 import org.apache.maven.model.Repository;
+import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -184,10 +185,10 @@ class FromEnvReposConfigurationProcessorTest {
 
     @Test
     void testConfigureMavenExecutionNoEnvVars() {
-        fromEnvSettingsConfigurationProcessor.configureMavenExecution(mavenExecutionRequest, Collections.emptyList());
+        fromEnvSettingsConfigurationProcessor.configureMavenExecution(mavenExecutionRequest, Collections.emptyList(), false);
         verifyNoInteractions(mavenExecutionRequest);
     }
-    
+
     @Test
     void testConfigureMavenExecution() {
 
@@ -199,10 +200,16 @@ class FromEnvReposConfigurationProcessorTest {
         String repo2Id = "repoId2";
         String repo2Url = "https://domain.org/test2";
 
+        Mirror mirror1 = new Mirror();
+        Mirror mirror2 = new Mirror();
+        mirror1.setMirrorOf("test1");
+        mirror2.setMirrorOf("*");
+        when(mavenExecutionRequest.getMirrors()).thenReturn(Arrays.asList(mirror1, mirror2));
+        
         fromEnvSettingsConfigurationProcessor.configureMavenExecution(mavenExecutionRequest, 
                 Arrays.asList(
                         new RepoFromEnv(repoId, repoUrl, repoUser, repoPw),
-                        new RepoFromEnv(repo2Id, repo2Url, null, null)));
+                        new RepoFromEnv(repo2Id, repo2Url, null, null)), false);
         
         verify(mavenExecutionRequest, times(1)).addServer(serverCaptor.capture());
         
@@ -221,6 +228,9 @@ class FromEnvReposConfigurationProcessorTest {
         Repository repo2 = profile.getRepositories().get(1);
         assertEquals(repo2Id, repo2.getId());
         assertEquals(repo2Url, repo2.getUrl());
+        
+        assertEquals("test1,!repoId1,!repoId2", mirror1.getMirrorOf());
+        assertEquals("*,!repoId1,!repoId2", mirror2.getMirrorOf());
 
     }
 
