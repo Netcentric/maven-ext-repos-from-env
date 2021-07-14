@@ -2,11 +2,11 @@
 
 # Maven Extension: Repos from System Env
 
-This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). 
+This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level system environment variables (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details in [below](#using-file-repositories)).
 
 While most of the time setting the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to configure this extension. 
 
-In case the relevant environment variables are not set, this extension has no effect. This allows to 
+In case the relevant environment variables are not set this extension has no effect (apart from the implicit file repo `.mvn/repository` if it exists). This allows to 
 
 * Minimise the changes in the regular project setup (only the extension has to be added, all mirrors, repositories from `settings.xml` may remain active for local developers or CI servers)
 * For constraint build environments (without full control over the `settings.xml` file), the environment variables can be set and for this case the repositories/credentials automatically become active
@@ -73,9 +73,9 @@ For this case two repositories and two virtual server entries for are created. T
 
 #### Using file repositories
 
-As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory`, e.g. `file://${maven.multiModuleProjectDirectory}/vendor1/repository`. If the directory `.mvn/repository` exists, it is automatically added as file repository.
+As generally true for Maven repositories, it is also possible to use file urls. To reference a file repository within the build repository itself, use the property `maven.multiModuleProjectDirectory` in the value of `MVN_SETTINGS_REPO_URL`, e.g. `MVN_SETTINGS_REPO_URL=file://${maven.multiModuleProjectDirectory}/vendor1/repository`. If the directory `.mvn/repository` exists, it is automatically added as file repository.
 
-This approach can be useful for parent poms.
+This approach can be useful for parent poms or importing dependencies (scope `import`).
 
 #### Using the verbose logging mode
 
