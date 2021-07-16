@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections4.map.CompositeMap;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.cli.CliRequest;
 import org.apache.maven.cli.MavenCli;
