@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.collections4.map.CompositeMap;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.cli.CliRequest;
 import org.apache.maven.cli.MavenCli;
@@ -32,7 +33,7 @@ import org.codehaus.plexus.logging.Logger;
 
 /**
  * <p>
- * Adds maven repositories as found in system environment to execution environment.
+ * Adds Maven repositories as found in environment variables or system properties to execution environment.
  * </p>
  * 
  * <p>
@@ -44,45 +45,44 @@ import org.codehaus.plexus.logging.Logger;
 @Named("configuration-processor")
 public class FromEnvReposConfigurationProcessor implements ConfigurationProcessor {
 
-    static final String ENV_PROP_PREFIX_MVN_SETTINGS_REPO = "MVN_SETTINGS_REPO";
-    static final String ENV_PROP_SUFFIX_URL = "_URL";
-    static final String ENV_PROP_SUFFIX_USERNAME = "_USERNAME";
-    static final String ENV_PROP_SUFFIX_PASSWORD = "_PASSWORD";
+    static final String KEY_PREFIX_MVN_SETTINGS_REPO = "MVN_SETTINGS_REPO";
+    static final String KEY_SUFFIX_URL = "_URL";
+    static final String KEY_SUFFIX_USERNAME = "_USERNAME";
+    static final String KEY_SUFFIX_PASSWORD = "_PASSWORD";
 
     static final String PROFILE_ID_REPOSITORIES_FROM_ENV = "repositoriesFromSysEnv";
     static final String REPO_ID_PREFIX = "sysEnvRepo";
 
-    static final String ENV_PROP_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
-    static final String ENV_PROP_ENV_REPOS_FIRST = "MVN_SETTINGS_ENV_REPOS_FIRST";
+    static final String KEY_MVN_SETTINGS_REPO_VERBOSE = "MVN_SETTINGS_REPO_LOG_VERBOSE";
+    static final String KEY_ENV_REPOS_FIRST = "MVN_SETTINGS_ENV_REPOS_FIRST";
 
     static final String VAR_EXPR_MULTIMODULE_PROJECT_DIR = "${"+MavenCli.MULTIMODULE_PROJECT_DIRECTORY+"}";
     static final String IMPLICIT_FILE_REPO_PATH = ".mvn/repository";
     static final String IMPLICIT_FILE_REPO_ID = "repository-in-mvn-ext-folder";
     
-    static final String ENV_PROP_DISABLE_BYPASS_MIRRORS = "MVN_DISABLE_BYPASS_MIRRORS";
+    static final String KEY_DISABLE_BYPASS_MIRRORS = "MVN_DISABLE_BYPASS_MIRRORS";
 
     @Inject
     private Logger logger;
 
     private boolean isVerbose;
-    private boolean envReposFirst;
 
     @Override
     public void process(CliRequest cliRequest) throws Exception {
-
-        Map<String, String> sysEnv = System.getenv();
-        isVerbose = Boolean.valueOf(sysEnv.get(ENV_PROP_MVN_SETTINGS_REPO_VERBOSE));
-        envReposFirst = Boolean.valueOf(sysEnv.get(ENV_PROP_ENV_REPOS_FIRST));
-        boolean disableBypassMirrors = Boolean.valueOf(sysEnv.get(ENV_PROP_DISABLE_BYPASS_MIRRORS));
-        List<RepoFromEnv> reposFromEnv = getReposFromEnv(sysEnv, cliRequest.getMultiModuleProjectDirectory());
+        Map<String, String> systemProperties = System.getProperties().entrySet().stream().collect(Collectors.toMap(e -> (String) e.getKey(), e -> (String) e.getValue()));
+        CompositeMap<String, String> configurationMap = new CompositeMap<>(systemProperties, System.getenv());
+        isVerbose = Boolean.parseBoolean(configurationMap.get(KEY_MVN_SETTINGS_REPO_VERBOSE));
+        boolean envReposFirst = Boolean.parseBoolean(configurationMap.get(KEY_ENV_REPOS_FIRST));
+        boolean disableBypassMirrors = Boolean.parseBoolean(configurationMap.get(KEY_DISABLE_BYPASS_MIRRORS));
+        List<RepoFromEnv> reposFromEnv = getReposFromConfiguration(configurationMap, cliRequest.getMultiModuleProjectDirectory());
         
         addImplicitFileRepo(reposFromEnv, cliRequest.getMultiModuleProjectDirectory());
 
-        configureMavenExecution(cliRequest.getRequest(), reposFromEnv, disableBypassMirrors);
+        configureMavenExecution(cliRequest.getRequest(), reposFromEnv, disableBypassMirrors, envReposFirst);
 
     }
 
-    void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv, boolean disableBypassMirrors) {
+    void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv, boolean disableBypassMirrors, boolean envReposFirst) {
         if (!reposFromEnv.isEmpty()) {
 
             logRepositoriesAndMirrors(request);
@@ -104,10 +104,10 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
             // activate profile
             repositoriesFromEnv.setId(PROFILE_ID_REPOSITORIES_FROM_ENV);
             if(envReposFirst) {
-                logMessage("Repos from system env are ordered *before* default repositories from settings.xml (" + ENV_PROP_ENV_REPOS_FIRST + "=true)");
+                logMessage("Repos from this extension are queried *before* default repositories from settings.xml (" + KEY_ENV_REPOS_FIRST + "=true)");
                 request.addProfile(repositoriesFromEnv);
             } else {
-                logMessage("Repos from system env are ordered *after* default repositories from settings.xml (" + ENV_PROP_ENV_REPOS_FIRST + "=false)");
+                logMessage("Repos from this extension are queried *after* default repositories from settings.xml (" + KEY_ENV_REPOS_FIRST + "=false)");
                 request.getProfiles().add(0, repositoriesFromEnv);
             }
             
@@ -182,30 +182,30 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         return server;
     }
 
-    List<RepoFromEnv> getReposFromEnv(Map<String, String> systemEnv, File reactorRootDir) {
+    List<RepoFromEnv> getReposFromConfiguration(Map<String, String> configMap, File reactorRootDir) {
 
-        List<RepoFromEnv> reposFromEnv = systemEnv.keySet().stream()
+        List<RepoFromEnv> reposFromEnv = configMap.keySet().stream()
                 .filter(Objects::nonNull).sorted()
-                .filter(key -> key.startsWith(ENV_PROP_PREFIX_MVN_SETTINGS_REPO) && key.endsWith(ENV_PROP_SUFFIX_URL))
-                .map(key -> key.substring(ENV_PROP_PREFIX_MVN_SETTINGS_REPO.length(), key.length() - ENV_PROP_SUFFIX_URL.length()))
+                .filter(key -> key.startsWith(KEY_PREFIX_MVN_SETTINGS_REPO) && key.endsWith(KEY_SUFFIX_URL))
+                .map(key -> key.substring(KEY_PREFIX_MVN_SETTINGS_REPO.length(), key.length() - KEY_SUFFIX_URL.length()))
                 .map(repoEnvNameInKey -> {
                     // for the case the short form without like MVN_SETTINGS_REPO_URL is used, repoEnvNameInKey is and empty string
                     // for the case a key like MVN_SETTINGS_REPO_MYCOMP1_URL is used, the id is sysEnvRepoMYCOMP1
                     String id = REPO_ID_PREFIX + (repoEnvNameInKey.isEmpty() ? "" : repoEnvNameInKey.replaceFirst("_", ""));
-                    String urlProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_URL;
-                    String url = systemEnv.get(urlProp);
-                    String usernameProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_USERNAME;
-                    String username = systemEnv.get(usernameProp);
-                    String passwordProp = ENV_PROP_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + ENV_PROP_SUFFIX_PASSWORD;
-                    String password = systemEnv.get(passwordProp);
+                    String urlKey = KEY_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + KEY_SUFFIX_URL;
+                    String url = configMap.get(urlKey);
+                    String usernameKey = KEY_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + KEY_SUFFIX_USERNAME;
+                    String username = configMap.get(usernameKey);
+                    String passwordKey = KEY_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + KEY_SUFFIX_PASSWORD;
+                    String password = configMap.get(passwordKey);
                     if (!isBlank(username) && isBlank(password)) {
-                        throw new IllegalArgumentException("If property " + usernameProp + " is set, password property " + passwordProp
+                        throw new IllegalArgumentException("If property " + usernameKey + " is set, password property " + passwordKey
                                 + " also has to be set along with it");
                     }
                     if (!isBlank(url)) {
                         if (isBlank(username)) {
-                            logMessage("Repository " + url + " has NOT configured credentials (env variables " + usernameProp + " and "
-                                    + passwordProp + " are missing)");
+                            logMessage("Repository " + url + " has NOT configured credentials (env variables " + usernameKey + " and "
+                                    + passwordKey + " are missing)");
                         }
                         if(url.contains(VAR_EXPR_MULTIMODULE_PROJECT_DIR)) {
                             String reactorRootDirPath = reactorRootDir.getAbsolutePath();
@@ -215,7 +215,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                         
                         return new RepoFromEnv(id, url, username, password);
                     } else {
-                        logMessage("Property " + urlProp + " is configured but blank, not adding a repository");
+                        logMessage("Property/Variable " + urlKey + " is configured but blank, not adding a repository");
                         return null;
                     }
                 })
@@ -224,7 +224,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         
         reposFromEnv.stream().forEach(repoFromEnv -> 
             // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
-            logger.info("Repository added from system environment variables: " + repoFromEnv.getUrl()  + " (id: " + repoFromEnv.getId() + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")")
+            logger.info("Repository added from system properties or environment variables: " + repoFromEnv.getUrl()  + " (id: " + repoFromEnv.getId() + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")")
         );
         
         return reposFromEnv;
