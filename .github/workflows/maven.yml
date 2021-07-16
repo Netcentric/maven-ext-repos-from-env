@@ -1,31 +1,58 @@
 name: Java CI/CD
 
-on: [push]
+on:
+  push:
+    branches:
+    - develop
+  pull_request:
+    branches:
+    - develop
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest] 
+        jdk: [8, 11, 16]
+        include:
+          # lengthy build steps should only be performed on linux with Java 11 (CodeCov analysis, deployment)
+          - os: ubuntu-latest
+            jdk: 11
+            isMainBuildEnv: true
+            namePrefix: 'Main '
+      fail-fast: false
+      
+    name: ${{ matrix.namePrefix }} Maven build (${{ matrix.os }}, JDK ${{ matrix.jdk }})
+    runs-on: ${{ matrix.os }}
     steps:
-    - name: Git Clone
-      uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
-        server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
-        server-username: MAVEN_USERNAME # env variable for username in deploy
-        server-password: MAVEN_PASSWORD # env variable for token in deploy
-    - name: Adjust Git Config
-      run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
-    - name: Build Reactor with Maven
-      if: github.ref != 'refs/heads/develop'
-      run: mvn -B clean install --file pom.xml
-    - name: Deploy Reactor with Maven
-      if: github.ref == 'refs/heads/develop'
-      run: mvn -B clean deploy --file pom.xml
-      env: 
-        MAVEN_USERNAME: ${{ secrets.OSSRH_TOKEN_USER }}
-        MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN_PASSWORD }}
+      - name: Git Clone
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: ${{ matrix.jdk }}
+          server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
+          server-username: MAVEN_USERNAME # env variable for username in deploy
+          server-password: MAVEN_PASSWORD # env variable for token in deploy
+       # sets environment variables to be used in subsequent steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
+      - name: Set environment variables
+        shell: bash
+        run: |
+          if [ "${{ matrix.isMainBuildEnv }}" = "true" ]; then
+            echo "MVN_ADDITIONAL_OPTS=-Dsonar.projectKey=Netcentric_maven-ext-repos-from-env -Dsonar.organization=netcentric -Dsonar.host.url=https://sonarcloud.io -Pcoverage-report" >> $GITHUB_ENV
+            echo "SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}" >> $GITHUB_ENV
+            if [ "${{github.ref}}" = "refs/heads/develop" ]; then
+              echo "MAVEN_USERNAME=${{ secrets.OSSRH_TOKEN_USER }}" >> $GITHUB_ENV
+              echo "MAVEN_PASSWORD=${{ secrets.OSSRH_TOKEN_PASSWORD }}" >> $GITHUB_ENV
+              echo "MVN_GOAL=clean deploy org.sonarsource.scanner.maven:sonar-maven-plugin:sonar" >> $GITHUB_ENV
+              echo "STEP_NAME_SUFFIX=(Deploys to OSSRH)" >> $GITHUB_ENV
+            else
+              echo "MVN_GOAL=clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar" >> $GITHUB_ENV
+            fi
+          else
+            echo "MVN_GOAL=clean verify" >> $GITHUB_ENV
+          fi
+         
+      - name: ${{ matrix.namePrefix }} Build with Maven ${{ env.STEP_NAME_SUFFIX }}
+        run: mvn -e -B -V ${{ env.MVN_GOAL }} ${{ env.MVN_ADDITIONAL_OPTS }}

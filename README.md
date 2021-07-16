@@ -1,4 +1,7 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env/badge.svg)](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env) ![Java CI/CD](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/CD/badge.svg) [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env/badge.svg)](https://maven-badges.herokuapp.com/maven-central/biz.netcentric.maven.extension/maven-ext-repos-from-env)
+![Java CI/CD](https://github.com/Netcentric/maven-ext-repos-from-env/workflows/Java%20CI/CD/badge.svg)
+[![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-v20.html) [![SonarCloud Status](https://sonarcloud.io/api/project_badges/measure?project=Netcentric_maven-ext-repos-from-env&metric=alert_status)](https://sonarcloud.io/dashboard?id=Netcentric_maven-ext-repos-from-env)
+[![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=Netcentric_maven-ext-repos-from-env&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=Netcentric_maven-ext-repos-from-env)
 
 # Maven Extension: Repos from System Env
 

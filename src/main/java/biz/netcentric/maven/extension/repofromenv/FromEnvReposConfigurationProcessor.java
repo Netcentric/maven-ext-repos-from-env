@@ -208,7 +208,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                                     + passwordKey + " are missing)");
                         }
                         if(url.contains(VAR_EXPR_MULTIMODULE_PROJECT_DIR)) {
-                            String reactorRootDirPath = reactorRootDir.getAbsolutePath();
+                            String reactorRootDirPath = reactorRootDir.toURI().getPath(); // only use forward slashes on all platforms
                             url = url.replace(VAR_EXPR_MULTIMODULE_PROJECT_DIR, reactorRootDirPath);
                             logMessage("Replaced "+VAR_EXPR_MULTIMODULE_PROJECT_DIR+" in url with "+reactorRootDirPath);
                         }
