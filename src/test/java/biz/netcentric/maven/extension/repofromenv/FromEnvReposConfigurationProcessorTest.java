@@ -18,6 +18,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,7 +44,7 @@ import org.mockito.Mockito;
 
 class FromEnvReposConfigurationProcessorTest {
 
-    private static final File PATH_TO_REACTOR_ROOT = new File("/path/to/reactor/root");
+    private static final Path PATH_TO_REACTOR_ROOT = Paths.get("path", "to", "reactor", "root");
 
     @InjectMocks
     private FromEnvReposConfigurationProcessor fromEnvSettingsConfigurationProcessor = new FromEnvReposConfigurationProcessor();
@@ -79,7 +80,7 @@ class FromEnvReposConfigurationProcessorTest {
         testEnv.put("MVN_SETTINGS_REPO_USERNAME", testUser);
         testEnv.put("MVN_SETTINGS_REPO_PASSWORD", testPassword);
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(1, reposFromEnv.size());
         assertEquals(testUrl, reposFromEnv.get(0).getUrl());
         assertEquals(testUser, reposFromEnv.get(0).getUsername());
@@ -101,7 +102,7 @@ class FromEnvReposConfigurationProcessorTest {
         testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_USERNAME", testUser);
         testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_PASSWORD", testPassword);
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(2, reposFromEnv.size());
         assertEquals(testUrl1, reposFromEnv.get(0).getUrl());
         assertEquals(testUser, reposFromEnv.get(0).getUsername());
@@ -124,7 +125,7 @@ class FromEnvReposConfigurationProcessorTest {
         // user set but no password set -> exception
 
         assertThrows(IllegalArgumentException.class, () -> {
-            fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+            fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         });
         
     }
@@ -135,7 +136,7 @@ class FromEnvReposConfigurationProcessorTest {
         String testUrl = "https://repodomain.com/path/to/repo";
         testEnv.put("MVN_SETTINGS_REPO_URL", testUrl);
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(1, reposFromEnv.size());
         assertEquals(testUrl, reposFromEnv.get(0).getUrl());
         assertEquals(null, reposFromEnv.get(0).getUsername());
@@ -149,7 +150,7 @@ class FromEnvReposConfigurationProcessorTest {
         String testUrl = "  ";
         testEnv.put("MVN_SETTINGS_REPO_URL", testUrl);
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(0, reposFromEnv.size());
     }
 
@@ -159,9 +160,9 @@ class FromEnvReposConfigurationProcessorTest {
         String testUrl = "file://${maven.multiModuleProjectDirectory}/.mvn/repository";
         testEnv.put("MVN_SETTINGS_REPO_URL", testUrl);
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(1, reposFromEnv.size());
-        assertEquals("file://"+PATH_TO_REACTOR_ROOT.getAbsolutePath()+"/.mvn/repository", reposFromEnv.get(0).getUrl());
+        assertEquals(PATH_TO_REACTOR_ROOT.toUri()+"/.mvn/repository", reposFromEnv.get(0).getUrl());
     }
     
     @Test
@@ -173,10 +174,8 @@ class FromEnvReposConfigurationProcessorTest {
         List<RepoFromEnv> reposFromEnv = new ArrayList<RepoFromEnv>();
         fromEnvSettingsConfigurationProcessor.addImplicitFileRepo(reposFromEnv, reactorRootDir);
         assertEquals(1, reposFromEnv.size());
-        assertEquals("file:" + reactorRootDir.getAbsolutePath() + "/.mvn/repository/", reposFromEnv.get(0).getUrl());
+        assertEquals(reactorRootDir.toURI() + ".mvn/repository/", reposFromEnv.get(0).getUrl());
     }
-    
-    
     
     @Test
     void testOtherSettings() {
@@ -184,7 +183,7 @@ class FromEnvReposConfigurationProcessorTest {
         testEnv.put(null, "test");
         testEnv.put("OTHER_KEY", "value");
 
-        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT);
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(0, reposFromEnv.size());
 
     }
@@ -247,7 +246,7 @@ class FromEnvReposConfigurationProcessorTest {
         when(request.getMultiModuleProjectDirectory()).thenReturn(projectRootDir.toFile());
         
         // configuration set up
-        String testUrl = "file://${maven.multiModuleProjectDirectory}/.mvn/repository";
+        String testUrl = "file://${maven.multiModuleProjectDirectory}.mvn/repository";
         System.setProperty("MVN_SETTINGS_REPO_SPECIAL1_URL", testUrl);
         System.setProperty("MVN_SETTINGS_REPO_SPECIAL1_USERNAME", "user");
         System.setProperty("MVN_SETTINGS_REPO_SPECIAL1_PASSWORD", "password");
@@ -259,6 +258,6 @@ class FromEnvReposConfigurationProcessorTest {
         assertEquals(1, profile.getRepositories().size());
         Repository repo1 = profile.getRepositories().get(0);
         assertEquals("sysEnvRepoSPECIAL1", repo1.getId());
-        assertEquals("file://" + projectRootDir.toString() + "/.mvn/repository", repo1.getUrl());
+        assertEquals(projectRootDir.toUri() + ".mvn/repository", repo1.getUrl());
     }
 }
