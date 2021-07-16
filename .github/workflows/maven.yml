@@ -42,6 +42,7 @@ jobs:
           if [ "${{ matrix.isMainBuildEnv }}" = "true" ]; then
             echo "MVN_ADDITIONAL_OPTS=-Dsonar.projectKey=Netcentric_maven-ext-repos-from-env -Dsonar.organization=netcentric -Dsonar.host.url=https://sonarcloud.io -Pcoverage-report" >> $GITHUB_ENV
             echo "SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}" >> $GITHUB_ENV
+            echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
             if [ "${{github.ref}}" = "refs/heads/develop" ]; then
               echo "MAVEN_USERNAME=${{ secrets.OSSRH_TOKEN_USER }}" >> $GITHUB_ENV
               echo "MAVEN_PASSWORD=${{ secrets.OSSRH_TOKEN_PASSWORD }}" >> $GITHUB_ENV
