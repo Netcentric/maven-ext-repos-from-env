@@ -277,8 +277,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         logger.info(
                 "Repository added from system properties or environment variables: " + repoFromEnv.getUrl() + " (id: "
                         + repoFromEnv.getId()
-                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername()
-                                : repoFromEnv.getApiToken() != null ? " token: " + repoFromEnv.getApiToken() : "")
+                        + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "")
                         + ")"));
 
         return reposFromEnv;
