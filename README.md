@@ -51,6 +51,15 @@ export MVN_SETTINGS_REPO_USERNAME=username
 export MVN_SETTINGS_REPO_PASSWORD=password
 ```
 
+#### Remote https repo using API/Bearer token
+
+The following environment variables can be set to have the Maven extension above automatically add both the repository (could be otherwise in `pom.xml` or in `settings.xml`) and the authentication for the server (would have to be configured in `settings.xml` without this extension):
+
+```
+export MVN_SETTINGS_REPO_URL=https://repo.myorg.com/path/to/repo
+export MVN_SETTINGS_REPO_API_TOKEN=apiToken
+```
+
 #### Remote https repo without authentication
 
 For the case no authentication is necessary, setting only one env variable is sufficient:
@@ -61,7 +70,7 @@ export MVN_SETTINGS_REPO_URL=https://repo.myorg.com/path/to/repo_no_auth
 
 For this case, no virtual `server` entry is generated for this server.
 
-#### Using multiple repositories
+#### Using multiple repositories using credentials
 
 It is also possible to use multiple repositories:
 
@@ -74,6 +83,21 @@ export MVN_SETTINGS_REPO_NAME1_PASSWORD=password1
 export MVN_SETTINGS_REPO_NAME2_URL=https://repo.myorg.com/path/to/repo
 export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
 export MVN_SETTINGS_REPO_NAME2_PASSWORD=password2
+```
+
+For this case two repositories and two virtual server entries for are created. The order can be important for performance reasons, the repositories are added in natural order of their names (alphabetical). 
+
+#### Using multiple repositories using API/Bearer tokens
+
+It is also possible to use multiple repositories using identity tokens:
+
+```
+# REPO_NAME1
+export MVN_SETTINGS_REPO_NAME1_URL=https://repo.myorg.com/path/to/repo
+export MVN_SETTINGS_REPO_NAME1_API_TOKEN=apiToken1
+# REPO_NAME2
+export MVN_SETTINGS_REPO_NAME2_URL=https://repo.myorg.com/path/to/repo
+export MVN_SETTINGS_REPO_NAME2_API_TOKEN=apiToken2
 ```
 
 For this case two repositories and two virtual server entries for are created. The order can be important for performance reasons, the repositories are added in natural order of their names (alphabetical). 
@@ -116,6 +140,12 @@ An example file might look like this
 -DMVN_SETTINGS_REPO_NAME1_URL=https://repo.myorg.com/path/to/repo -DMVN_SETTINGS_REPO_NAME1_USERNAME=username1 -DMVN_SETTINGS_REPO_NAME1_PASSWORD=password1
 ```
 
+or
+
+```
+-DMVN_SETTINGS_REPO_NAME1_URL=https://repo.myorg.com/path/to/repo -DMVN_SETTINGS_REPO_NAME1_API_TOKEN=apiToken1
+```
+
 Such a configuration can be distributed through the SCM along with the code (in case the values are not supposed to be treated as secrets).
 
 ## Usage with Adobe Experience Manager Cloud Manager
@@ -147,6 +177,18 @@ aio cloudmanager:set-pipeline-variables \
      MVN_SETTINGS_REPO_USERNAME <REPO_USER> \
    --secret \
      MVN_SETTINGS_REPO_PASSWORD <REPO_PASSWORD>  
+```
+
+or
+
+```
+aio cloudmanager:set-pipeline-variables \
+   <PIPELINE_ID> \
+   --programId=<PROGRAM_ID> \
+   --variable \
+     MVN_SETTINGS_REPO_URL <REPO_URL> \
+   --secret \
+     MVN_SETTINGS_REPO_API_TOKEN <REPO_API_TOKEN>  
 ```
 
 The parameters `<PIPELINE_ID>` and `<PROGRAM_ID>` can be derived from URLs when browsing the Cloud Manager. The call needs to be made for each pipeline as set up in cloud manager (all non-prod and the prod pipeline).
