@@ -33,6 +33,7 @@ import org.apache.maven.model.Repository;
 import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -85,6 +86,21 @@ class FromEnvReposConfigurationProcessorTest {
         assertEquals(testUrl, reposFromEnv.get(0).getUrl());
         assertEquals(testUser, reposFromEnv.get(0).getUsername());
         assertEquals(testPassword, reposFromEnv.get(0).getPassword());
+        assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX, reposFromEnv.get(0).getId());
+    }
+    
+    @Test
+    void testGetReposFromEnvOneWithApiToken() {
+
+        String testUrl = "https://repodomain.com/path/to/repo";
+        String testApiToken = "apiToken";
+        testEnv.put("MVN_SETTINGS_REPO_URL", testUrl);
+        testEnv.put("MVN_SETTINGS_REPO_API_TOKEN", testApiToken);
+
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
+        assertEquals(1, reposFromEnv.size());
+        assertEquals(testUrl, reposFromEnv.get(0).getUrl());
+        assertEquals(testApiToken, reposFromEnv.get(0).getApiToken());
         assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX, reposFromEnv.get(0).getId());
     }
 
@@ -229,6 +245,59 @@ class FromEnvReposConfigurationProcessorTest {
         assertEquals(repoId, server.getId());
         assertEquals(repoUser, server.getUsername());
         assertEquals(repoPw, server.getPassword());
+        
+        Repository repo2 = profile.getRepositories().get(1);
+        assertEquals(repo2Id, repo2.getId());
+        assertEquals(repo2Url, repo2.getUrl());
+        
+        assertEquals("test1,!repoId1,!repoId2", mirror1.getMirrorOf());
+        assertEquals("*,!repoId1,!repoId2", mirror2.getMirrorOf());
+
+    }
+    
+    @Test
+    void testConfigureMavenExecutionWithApiToken() {
+        
+        String repoId = "repoId1";
+        String repoUrl = "https://domain.org/test";
+        String repoApiToken = "apiToken";
+
+        String repo2Id = "repoId2";
+        String repo2Url = "https://domain.org/test2";
+
+        Mirror mirror1 = new Mirror();
+        Mirror mirror2 = new Mirror();
+        mirror1.setMirrorOf("test1");
+        mirror2.setMirrorOf("*");
+        when(mavenExecutionRequest.getMirrors()).thenReturn(Arrays.asList(mirror1, mirror2));
+        
+        fromEnvSettingsConfigurationProcessor.configureMavenExecution(mavenExecutionRequest, 
+                Arrays.asList(
+                        new RepoFromEnv(repoId, repoUrl, repoApiToken),
+                        new RepoFromEnv(repo2Id, repo2Url, null)), false, false);
+        
+        verify(mavenExecutionRequest, times(1)).addServer(serverCaptor.capture());
+  
+        assertEquals(1, profiles.size());
+        Profile profile = profiles.get(0);
+        assertEquals(FromEnvReposConfigurationProcessor.PROFILE_ID_REPOSITORIES_FROM_ENV, profile.getId());
+        assertEquals(2, profile.getRepositories().size());
+        Repository repo1 = profile.getRepositories().get(0);
+        assertEquals(repoId, repo1.getId());
+        assertEquals(repoUrl, repo1.getUrl());
+        Server server = serverCaptor.getValue();
+        assertEquals(repoId, server.getId());
+        String configuration = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
+                + "<configuration>\r\n"
+                + "  <httpHeaders>\r\n"
+                + "    <property>\r\n"
+                + "      <name>Authorization</name>\r\n"
+                + "      <value>Bearer apiToken</value>\r\n"
+                + "    </property>\r\n"
+                + "  </httpHeaders>\r\n"
+                + "  <wagonProvider>httpClient</wagonProvider>\r\n"
+                + "</configuration>";
+        assertEquals(configuration, server.getConfiguration().toString());
         
         Repository repo2 = profile.getRepositories().get(1);
         assertEquals(repo2Id, repo2.getId());
