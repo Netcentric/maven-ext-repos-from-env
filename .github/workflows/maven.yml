@@ -13,11 +13,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest] 
-        jdk: [8, 11, 16]
+        jdk: [11, 17, 21]
         include:
-          # lengthy build steps should only be performed on linux with Java 11 (CodeCov analysis, deployment)
+          # lengthy build steps should only be performed on linux with Java 17 (Sonarcloud analysis, deployment)
           - os: ubuntu-latest
-            jdk: 11
+            jdk: 17
             isMainBuildEnv: true
             namePrefix: 'Main '
       fail-fast: false
@@ -26,9 +26,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Git Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.jdk }}
