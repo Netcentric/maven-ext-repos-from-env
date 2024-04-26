@@ -5,7 +5,7 @@
 
 # Maven Extension: Repos from System Env
 
-This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level environment variables or Java system properties (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details [below](#using-file-repositories)).
+This Maven extension allows to add additional remote repositories to the Maven execution by solely using OS level environment variables or Java system properties (without touching `settings.xml` nor `pom.xml`). Furthermore it allows to place certain artifacts directly under `.mvn/repository` (see details [below](#using-file-repositories)). This is achieved by modifying the in-memory [Maven settings](https://maven.apache.org/settings.html) before using them.
 
 While most of the time setting the remote repositories in the `settings.xml` (and potentially also in `pom.xml`) is the recommended approach, for cases where the `settings.xml` is not under the development team's control it can be useful to configure this extension. 
 
@@ -14,7 +14,7 @@ In case the relevant environment variables are not set this extension has no eff
 * Minimise the changes in the regular project setup (only the extension has to be added, all mirrors, repositories from `settings.xml` may remain active for local developers or CI servers)
 * Add additional repositories with the help of environment variables or system properties. 
 
-This is helpful for constrained build environments (without full control over the `settings.xml` file) and also to enforce a common repository across all developers without additional manual set up.
+This is helpful for constrained build environments (without full control over the `settings.xml` file) and also to enforce a common repository across all developers without additional manual set up. As this extension always adds a **new** repository it is mostly useful for cases where no POM repositories are being used. *Just adding credentials for an existing (POM or settings.xml) repository is not supported yet ([issue 28](https://github.com/Netcentric/maven-ext-repos-from-env/issues/28))*.
 
 ## Simple Usage
 
@@ -51,19 +51,21 @@ export MVN_SETTINGS_REPO_USERNAME=username
 export MVN_SETTINGS_REPO_PASSWORD=password
 ```
 
+This leads to using authentication via basic auth to the given repository.
+
 #### Remote https repo without authentication
 
-For the case no authentication is necessary, setting only one env variable is sufficient:
+For the case no authentication is necessary, setting only one environment variable is sufficient:
 
 ```
 export MVN_SETTINGS_REPO_URL=https://repo.myorg.com/path/to/repo_no_auth
 ```
 
-For this case, no virtual `server` entry is generated for this server.
+For this case, no corresponding `server` entry is generated for this repository.
 
 #### Using multiple repositories
 
-It is also possible to use multiple repositories:
+It is also possible to use multiple repositories by placing an infix between the environment prefix `MVN_SETTINGS_REPO` and the configuration specific suffix:
 
 ```
 # REPO_NAME1
@@ -76,7 +78,7 @@ export MVN_SETTINGS_REPO_NAME2_USERNAME=username2
 export MVN_SETTINGS_REPO_NAME2_PASSWORD=password2
 ```
 
-For this case two repositories and two virtual server entries for are created. The order can be important for performance reasons, the repositories are added in natural order of their names (alphabetical). 
+In this example two repositories and two server entries for are created. The order can be important for performance reasons, the repositories are added in alphabetical order of their names. 
 
 #### Using file repositories
 
@@ -98,13 +100,14 @@ In case the `settings.xml` defines one or multiple mirrors, those are automatica
 
 #### Repository order
 
-By default, the repositories as configured in env are queried **after** the default repositories in settings.xml. For the case that the system env repo is also a proxy repository for Maven Central (i.e. containing all required artifacts), it can be forced to be used first (before the repositories from settings.xml).
+By default, the repositories as configured in env are queried **after** the default repositories in `settings.xml`. For the case that the system env repo is also a proxy repository for Maven Central (i.e. containing all required artifacts), it can be forced to be used first (before the repositories from settings.xml).
 
 ```
 export MVN_SETTINGS_ENV_REPOS_FIRST=true
 ```
 
 Setting this flag is only relevant for performance reasons, the overall build will work with or without this flag.
+For the general order of repositories (both from settings and POM) refer to <https://maven.apache.org/guides/mini/guide-multiple-repositories.html#repository-order>.
 
 #### Distribute configuration with code
 
