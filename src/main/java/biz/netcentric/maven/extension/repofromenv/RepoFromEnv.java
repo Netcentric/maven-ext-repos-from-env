@@ -14,12 +14,14 @@ class RepoFromEnv {
     private final String url;
     private final String username;
     private final String password;
+    private final boolean usePreemptiveAuth;
 
-    public RepoFromEnv(String id, String url, String username, String password) {
+    public RepoFromEnv(String id, String url, String username, String password, boolean usePreemptiveAuth) {
         this.id = id;
         this.url = url;
         this.username = username;
         this.password = password;
+        this.usePreemptiveAuth = usePreemptiveAuth;
     }
 
     public String getId() {
@@ -36,6 +38,10 @@ class RepoFromEnv {
 
     public String getPassword() {
         return password;
+    }
+
+    public boolean isUsePreemptiveAuth() {
+        return usePreemptiveAuth;
     }
 
 }

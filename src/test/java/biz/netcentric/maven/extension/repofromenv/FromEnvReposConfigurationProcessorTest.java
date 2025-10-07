@@ -9,7 +9,9 @@
 package biz.netcentric.maven.extension.repofromenv;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -85,6 +87,7 @@ class FromEnvReposConfigurationProcessorTest {
         assertEquals(testUrl, reposFromEnv.get(0).getUrl());
         assertEquals(testUser, reposFromEnv.get(0).getUsername());
         assertEquals(testPassword, reposFromEnv.get(0).getPassword());
+        assertFalse(reposFromEnv.get(0).isUsePreemptiveAuth());
         assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX, reposFromEnv.get(0).getId());
     }
 
@@ -101,17 +104,20 @@ class FromEnvReposConfigurationProcessorTest {
         testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_URL", testUrl2);
         testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_USERNAME", testUser);
         testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_PASSWORD", testPassword);
+        testEnv.put("MVN_SETTINGS_REPO_SPECIAL2_USE_PREEMPTIVE_AUTH", "true");
 
         List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
         assertEquals(2, reposFromEnv.size());
         assertEquals(testUrl1, reposFromEnv.get(0).getUrl());
         assertEquals(testUser, reposFromEnv.get(0).getUsername());
         assertEquals(testPassword, reposFromEnv.get(0).getPassword());
+        assertFalse(reposFromEnv.get(0).isUsePreemptiveAuth());
         assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX + "SPECIAL1", reposFromEnv.get(0).getId());
 
         assertEquals(testUrl2, reposFromEnv.get(1).getUrl());
         assertEquals(testUser, reposFromEnv.get(1).getUsername());
         assertEquals(testPassword, reposFromEnv.get(1).getPassword());
+        assertTrue(reposFromEnv.get(1).isUsePreemptiveAuth());
         assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX + "SPECIAL2", reposFromEnv.get(1).getId());
 
     }
@@ -213,8 +219,8 @@ class FromEnvReposConfigurationProcessorTest {
         
         fromEnvSettingsConfigurationProcessor.configureMavenExecution(mavenExecutionRequest, 
                 Arrays.asList(
-                        new RepoFromEnv(repoId, repoUrl, repoUser, repoPw),
-                        new RepoFromEnv(repo2Id, repo2Url, null, null)), false, false);
+                        new RepoFromEnv(repoId, repoUrl, repoUser, repoPw, false),
+                        new RepoFromEnv(repo2Id, repo2Url, null, null, false)), false, false);
         
         verify(mavenExecutionRequest, times(1)).addServer(serverCaptor.capture());
         
@@ -259,5 +265,25 @@ class FromEnvReposConfigurationProcessorTest {
         Repository repo1 = profile.getRepositories().get(0);
         assertEquals("sysEnvRepoSPECIAL1", repo1.getId());
         assertEquals(projectRootDir.toUri() + ".mvn/repository", repo1.getUrl());
+    }
+
+    @Test
+    void testGetReposFromEnvWithPreemptiveAuth() {
+
+        String testUrl = "https://repodomain.com/path/to/repo";
+        String testUser = "user";
+        String testPassword = "pass";
+        testEnv.put("MVN_SETTINGS_REPO_URL", testUrl);
+        testEnv.put("MVN_SETTINGS_REPO_USERNAME", testUser);
+        testEnv.put("MVN_SETTINGS_REPO_PASSWORD", testPassword);
+        testEnv.put("MVN_SETTINGS_REPO_USE_PREEMPTIVE_AUTH", "true");
+
+        List<RepoFromEnv> reposFromEnv = fromEnvSettingsConfigurationProcessor.getReposFromConfiguration(testEnv, PATH_TO_REACTOR_ROOT.toFile());
+        assertEquals(1, reposFromEnv.size());
+        assertEquals(testUrl, reposFromEnv.get(0).getUrl());
+        assertEquals(testUser, reposFromEnv.get(0).getUsername());
+        assertEquals(testPassword, reposFromEnv.get(0).getPassword());
+        assertTrue(reposFromEnv.get(0).isUsePreemptiveAuth());
+        assertEquals(FromEnvReposConfigurationProcessor.REPO_ID_PREFIX, reposFromEnv.get(0).getId());
     }
 }

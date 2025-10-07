@@ -53,6 +53,13 @@ export MVN_SETTINGS_REPO_PASSWORD=password
 
 This leads to using authentication via basic auth to the given repository.
 
+It is also possible to use [Preemptive Authentication](https://maven.apache.org/guides/mini/guide-http-settings.html#Example.3A_Using_Preemptive_Authentication):
+
+```
+export MVN_SETTINGS_REPO_USE_PREEMPTIVE_AUTH=true
+```
+
+
 #### Remote https repo without authentication
 
 For the case no authentication is necessary, setting only one environment variable is sufficient:

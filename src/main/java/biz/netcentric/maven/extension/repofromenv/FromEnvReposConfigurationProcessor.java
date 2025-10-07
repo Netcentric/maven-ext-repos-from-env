@@ -30,6 +30,7 @@ import org.apache.maven.model.RepositoryPolicy;
 import org.apache.maven.settings.Mirror;
 import org.apache.maven.settings.Server;
 import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
 
 /**
  * <p>
@@ -49,6 +50,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     static final String KEY_SUFFIX_URL = "_URL";
     static final String KEY_SUFFIX_USERNAME = "_USERNAME";
     static final String KEY_SUFFIX_PASSWORD = "_PASSWORD";
+    static final String KEY_SUFFIX_USE_PREEMPTIVE_AUTH = "_USE_PREEMPTIVE_AUTH";
 
     static final String PROFILE_ID_REPOSITORIES_FROM_ENV = "repositoriesFromSysEnv";
     static final String REPO_ID_PREFIX = "sysEnvRepo";
@@ -179,7 +181,25 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         server.setId(repoFromEnv.getId());
         server.setUsername(repoFromEnv.getUsername());
         server.setPassword(repoFromEnv.getPassword());
+        if(repoFromEnv.isUsePreemptiveAuth()) {
+            configurePreemptiveAuth(server);
+        }
         return server;
+    }
+
+    private void configurePreemptiveAuth(Server server) {
+        Xpp3Dom configuration = new Xpp3Dom("configuration");
+        server.setConfiguration(configuration);
+
+        Xpp3Dom httpConfiguration = new Xpp3Dom("httpConfiguration");
+        configuration.addChild(httpConfiguration);
+        
+        Xpp3Dom allMethods = new Xpp3Dom("all");
+        httpConfiguration.addChild(allMethods);
+
+        Xpp3Dom usePreemptive = new Xpp3Dom("usePreemptive");
+        allMethods.addChild(usePreemptive);
+        usePreemptive.setValue("true");
     }
 
     List<RepoFromEnv> getReposFromConfiguration(Map<String, String> configMap, File reactorRootDir) {
@@ -202,6 +222,10 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                         throw new IllegalArgumentException("If property " + usernameKey + " is set, password property " + passwordKey
                                 + " also has to be set along with it");
                     }
+                    
+                    String usePreemptiveAuthKey = KEY_PREFIX_MVN_SETTINGS_REPO + repoEnvNameInKey + KEY_SUFFIX_USE_PREEMPTIVE_AUTH;
+                    boolean usePreemptiveAuth = Boolean.valueOf(configMap.get(usePreemptiveAuthKey));
+
                     if (!isBlank(url)) {
                         if (isBlank(username)) {
                             logMessage("Repository " + url + " has NOT configured credentials (env variables " + usernameKey + " and "
@@ -213,7 +237,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
                             logMessage("Replaced "+VAR_EXPR_MULTIMODULE_PROJECT_DIR+" in url with "+reactorRootDirPath);
                         }
                         
-                        return new RepoFromEnv(id, url, username, password);
+                        return new RepoFromEnv(id, url, username, password, usePreemptiveAuth);
                     } else {
                         logMessage("Property/Variable " + urlKey + " is configured but blank, not adding a repository");
                         return null;
@@ -235,7 +259,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     void addImplicitFileRepo(List<RepoFromEnv> reposFromEnv, File multiModuleProjectDirectory) {
         File implicitRepo = new File(multiModuleProjectDirectory, IMPLICIT_FILE_REPO_PATH);
         if(implicitRepo.exists()) {
-            reposFromEnv.add(0, new RepoFromEnv(IMPLICIT_FILE_REPO_ID, implicitRepo.toURI().toString(), null, null));
+            reposFromEnv.add(0, new RepoFromEnv(IMPLICIT_FILE_REPO_ID, implicitRepo.toURI().toString(), null, null, false));
             logger.info("Implicit file repository added for directory " + IMPLICIT_FILE_REPO_PATH);
         }
     }
