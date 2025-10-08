@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections4.map.CompositeMap;
+import org.apache.maven.AbstractMavenLifecycleParticipant;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.cli.CliRequest;
 import org.apache.maven.cli.MavenCli;
@@ -64,6 +65,11 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     
     static final String KEY_DISABLE_BYPASS_MIRRORS = "MVN_DISABLE_BYPASS_MIRRORS";
 
+    // Compare documentation:
+    //    https://maven.apache.org/guides/mini/guide-resolver-transport.html#Low-level_Resolver_configuration
+    //    https://maven.apache.org/resolver-archives/resolver-LATEST-1.x/configuration.html
+    static final String SYS_PROP_AETHER_CONNECTOR_HTTP_PREEMPTIVE_AUTH_PREFIX = "aether.connector.http.preemptiveAuth.";
+
     @Inject
     private Logger logger;
 
@@ -82,6 +88,8 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
 
         configureMavenExecution(cliRequest.getRequest(), reposFromEnv, disableBypassMirrors, envReposFirst);
 
+        // configure preemptive auth for Maven resolver (>= Maven 3.9.0)
+        configurePreemptiveAuthForMavenResolver(cliRequest, reposFromEnv);
     }
 
     void configureMavenExecution(MavenExecutionRequest request, List<RepoFromEnv> reposFromEnv, boolean disableBypassMirrors, boolean envReposFirst) {
@@ -140,6 +148,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
     }
 
     private void logRepositoriesAndMirrors(MavenExecutionRequest request) {
+        
 
         List<ArtifactRepository> repositories = request.getRemoteRepositories();
         List<ArtifactRepository> pluginRepositories = request.getPluginArtifactRepositories();
@@ -182,12 +191,28 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         server.setUsername(repoFromEnv.getUsername());
         server.setPassword(repoFromEnv.getPassword());
         if(repoFromEnv.isUsePreemptiveAuth()) {
-            configurePreemptiveAuth(server);
+            // configure preemptive auth for wagon transport (< Maven 3.9.0)
+            configurePreemptiveAuthForWagon(server);
         }
         return server;
     }
 
-    private void configurePreemptiveAuth(Server server) {
+    void configurePreemptiveAuthForMavenResolver(CliRequest cliRequest, List<RepoFromEnv> reposFromEnv) {
+        
+        reposFromEnv.stream()
+                .filter(RepoFromEnv::isUsePreemptiveAuth)
+                .forEach(repoFromEnv -> 
+        {
+            String sysPropKey = SYS_PROP_AETHER_CONNECTOR_HTTP_PREEMPTIVE_AUTH_PREFIX+repoFromEnv.getId();
+            cliRequest.getUserProperties().setProperty(sysPropKey, String.valueOf(true));
+
+            logger.info("Setting "+sysPropKey+"=true for repository "+repoFromEnv.getId()+" to enable preemptive auth in resolver");
+
+        });
+        
+    }
+
+    private void configurePreemptiveAuthForWagon(Server server) {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         server.setConfiguration(configuration);
 
@@ -248,7 +273,11 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         
         reposFromEnv.stream().forEach(repoFromEnv -> 
             // minimal line that we always log directly (regardless of MVN_SETTINGS_REPO_LOG_VERBOSE or -X parameter)
-            logger.info("Repository added from system properties or environment variables: " + repoFromEnv.getUrl()  + " (id: " + repoFromEnv.getId() + (repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() : "") + ")")
+            {
+                String authInfoPreemptive = repoFromEnv.isUsePreemptiveAuth() ? " with preemptive auth" : "";
+                String authInfoMsg = repoFromEnv.getUsername() != null ? " user: " + repoFromEnv.getUsername() + authInfoPreemptive : "";
+                logger.info("Repository added from system properties or environment variables: " + repoFromEnv.getUrl()  + " (id: " + repoFromEnv.getId() + authInfoMsg + ")");
+            }
         );
         
         return reposFromEnv;

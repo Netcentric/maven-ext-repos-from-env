@@ -53,7 +53,7 @@ export MVN_SETTINGS_REPO_PASSWORD=password
 
 This leads to using authentication via basic auth to the given repository.
 
-It is also possible to use [Preemptive Authentication](https://maven.apache.org/guides/mini/guide-http-settings.html#Example.3A_Using_Preemptive_Authentication):
+It is also possible to use [Preemptive Authentication](https://maven.apache.org/guides/mini/guide-resolver-transport.html#Low-level_Resolver_configuration):
 
 ```
 export MVN_SETTINGS_REPO_USE_PREEMPTIVE_AUTH=true
