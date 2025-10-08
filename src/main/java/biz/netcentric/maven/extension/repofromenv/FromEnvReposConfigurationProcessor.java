@@ -205,9 +205,7 @@ public class FromEnvReposConfigurationProcessor implements ConfigurationProcesso
         {
             String sysPropKey = SYS_PROP_AETHER_CONNECTOR_HTTP_PREEMPTIVE_AUTH_PREFIX+repoFromEnv.getId();
             cliRequest.getUserProperties().setProperty(sysPropKey, String.valueOf(true));
-
-            logger.info("Setting "+sysPropKey+"=true for repository "+repoFromEnv.getId()+" to enable preemptive auth in resolver");
-
+            logMessage("Setting "+sysPropKey+"=true for repository "+repoFromEnv.getId()+" to enable preemptive auth in resolver");
         });
         
     }
