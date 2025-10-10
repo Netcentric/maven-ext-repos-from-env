@@ -41,18 +41,20 @@
     </issueManagement>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>sonatype-central-portal</id>
+            <url>https://repo.maven.apache.org/maven2</url>
         </repository>
+        <snapshotRepository>
+            <id>sonatype-central-portal</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+        </snapshotRepository>
     </distributionManagement>
 
     <properties>
-        <maven.version>3.3.9</maven.version>
+        <!-- required for njord-->
+        <maven.version>3.9.0</maven.version>
+        <njord.version>0.8.4</njord.version>
         <java.target.version>8</java.target.version> <!-- used for compiler plugin and animal-sniffer, for compatibility reasons with Java 9 only the values 6,7,8 and 9 is allowed -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -173,10 +175,40 @@
                         <scmReleaseCommitComment>@{prefix} prepare release @{releaseLabel} [skip ci]</scmReleaseCommitComment>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>eu.maveniverse.maven.plugins</groupId>
+                    <artifactId>njord</artifactId>
+                    <version>${njord.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>11</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>${maven.version}</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -222,19 +254,14 @@
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            
         </plugins>
+        <extensions>
+            <extension>
+                <groupId>eu.maveniverse.maven.njord</groupId>
+                <artifactId>extension3</artifactId>
+                <version>${njord.version}</version>
+            </extension>
+        </extensions>
     </build>
 
     <profiles>
