@@ -134,31 +134,12 @@ Such a configuration can be distributed through the SCM along with the code (in 
 
 Reference the Maven extension in the `.mvn/extensions.xml` file as described above.
 
-### Step 2: Setup the environment for your build using Adobe IO
+### Step 2: Setup the pipeline environment variables
 
-*Prerequisites:*
+Set the variables 
 
-* Add the `Cloud Manager API` to your Adobe IO project at [https://console.adobe.io/](https://console.adobe.io/)
-  * Add a Service Account (JWT based) by either uploading a public key (from a manually generated private/public key pair) or letting the wizard generate both private and public key for you. In both cases make sure to store the private key in a safe place.
-  * Setting environment variables requires [permissions of role `Deployment Manager`](https://www.adobe.io/apis/experiencecloud/cloud-manager/docs.html#!AdobeDocs/cloudmanager-api-docs/master/permissions.md) so make sure that the service account has at least that permission
-* Install [aio-cli](https://github.com/adobe/aio-cli/blob/master/README.md#usage)
-* Setup Adobe IO CLI in general [Getting Started](https://www.adobe.io/apis/experienceplatform/project-firefly/docs.html#!AdobeDocs/project-firefly/master/getting_started/setup.md)
-* Install [aio-cli-plugin-cloudmanager](https://github.com/adobe/aio-cli-plugin-cloudmanager#installation)
-* Setup [Adobe IO authentication with Cloud Manager](https://github.com/adobe/aio-cli-plugin-cloudmanager#authentication)
+* `MVN_SETTINGS_REPO_URL`
+* `MVN_SETTINGS_REPO_USERNAME`
+* `MVN_SETTINGS_REPO_PASSWORD`
 
-Once everything is set up, the environment variables of the Cloud Manager build can be set as follows:
-
-```
-aio cloudmanager:set-pipeline-variables \
-   <PIPELINE_ID> \
-   --programId=<PROGRAM_ID> \
-   --variable \
-     MVN_SETTINGS_REPO_URL <REPO_URL> \
-     MVN_SETTINGS_REPO_USERNAME <REPO_USER> \
-   --secret \
-     MVN_SETTINGS_REPO_PASSWORD <REPO_PASSWORD>  
-```
-
-The parameters `<PIPELINE_ID>` and `<PROGRAM_ID>` can be derived from URLs when browsing the Cloud Manager. The call needs to be made for each pipeline as set up in cloud manager (all non-prod and the prod pipeline).
-
-See also official [Adobe documentation](https://docs.adobe.com/content/help/en/experience-manager-cloud-service/onboarding/getting-access/creating-aem-application-project.html#pipeline-variables) and [reference on GitHub](https://github.com/adobe/aio-cli-plugin-cloudmanager#aio-cloudmanagerset-pipeline-variables-pipelineid)
+via one of the means outlined at <https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/cicd-pipelines/pipeline-variables>
